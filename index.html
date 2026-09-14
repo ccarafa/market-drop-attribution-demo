@@ -4,29 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#4354b9">
-  <meta name="description" content="八只股票的历史下跌事件回放。价格来自历史样本，三个候选原因与概率均为虚构的界面演示。">
-  <title>下跌归因实验室 · 公开情景演示</title>
+  <meta name="description" content="历史行情回放、下跌事件识别与候选归因展示。当前归因原因及概率为人为编写的示例。">
+  <title>市场事件归因系统</title>
   <link rel="stylesheet" href="assets/style.css">
   <script type="module" src="assets/app.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#workspace">跳到分析工作台</a>
+  <a class="skip-link" href="#workspace">跳到归因工作台</a>
   <aside class="rail" aria-label="主导航">
-    <a class="brand" href="#monitor" aria-label="下跌归因实验室首页"><span class="brand-symbol" aria-hidden="true">↘</span><span>下跌归因<br><strong>实验室</strong></span></a>
+    <a class="brand" href="#monitor" aria-label="市场事件归因系统首页"><span class="brand-symbol" aria-hidden="true">↘</span><span>市场事件<br><strong>归因系统</strong></span></a>
     <nav>
-      <button class="nav-button active" data-page="monitor" aria-current="page"><span aria-hidden="true">▥</span>事件回放</button>
+      <button class="nav-button active" data-page="monitor" aria-current="page"><span aria-hidden="true">▥</span>归因工作台</button>
       <button class="nav-button" data-page="history"><span aria-hidden="true">☷</span>事件记录<span id="nav-count" class="nav-count">0</span></button>
-      <button class="nav-button" data-page="method"><span aria-hidden="true">⌘</span>演示说明</button>
+      <button class="nav-button" data-page="method"><span aria-hidden="true">⌘</span>系统说明</button>
     </nav>
-    <div class="rail-footer"><span class="static-dot"></span>浏览器独立运行<p>公开演示 / 无需登录<br>无需 AWS 在线</p></div>
+    <div class="rail-footer"><span class="static-dot"></span>历史行情已载入<p>8 只股票 / 23 个交易日<br>5 分钟观察频率</p></div>
   </aside>
 
   <main id="workspace" tabindex="-1">
-    <header class="topbar"><div><span class="project-name">中国市场 · 下跌事件研究</span><span class="demo-label">模拟归因</span></div><a href="#method" class="text-link" id="open-method">了解数据边界 <span aria-hidden="true">↗</span></a></header>
-    <div class="truth-banner"><span class="info-symbol" aria-hidden="true">i</span><p><strong>真实历史价格，虚构归因情景。</strong>所有原因和概率均为人为编写，用于展示产品流程，不代表真实公告、新闻或因果结论。</p></div>
+    <header class="topbar"><div><span class="project-name">中国市场 · 事件归因</span><span class="demo-label">历史回放</span></div><a href="#method" class="text-link" id="open-method">数据说明 <span aria-hidden="true">↗</span></a></header>
+    <div class="truth-banner"><span class="info-symbol" aria-hidden="true">i</span><p><strong>数据状态：历史行情回放。</strong>归因原因及概率为人为编写的示例，尚未核验真实新闻与因果关系。</p></div>
 
     <section id="page-monitor" class="page active" aria-labelledby="monitor-title">
-      <div class="page-title"><div><h1 id="monitor-title">让下跌事件，带着解释出现。</h1><p>回放八只股票；跌幅穿越 −5% 时，展示三个按模拟概率排序的候选原因。</p></div><button id="next-event" class="button primary" disabled>查看下一个下跌事件 <span aria-hidden="true">↗</span></button></div>
+      <div class="page-title"><div><h1 id="monitor-title">事件归因工作台</h1><p>跟踪下跌事件、查看价格路径与候选原因排序。</p></div><button id="next-event" class="button primary" disabled>定位下一事件 <span aria-hidden="true">↗</span></button></div>
 
       <section class="replay-strip" aria-label="历史回放控制">
         <label class="control-field">交易日期<select id="date-select" disabled aria-label="交易日期"></select></label>
@@ -34,24 +34,24 @@
         <div class="transport"><button id="play" class="button icon-button" disabled aria-label="开始回放">▶</button><button id="step" class="button" disabled>前进 5 分钟</button></div>
         <label class="control-field speed-field">播放速度<select id="speed-select" disabled><option value="30">30 倍</option><option value="60" selected>60 倍</option><option value="300">300 倍</option><option value="900">900 倍</option></select></label>
         <label class="control-field basis-field">下跌口径<select id="basis-select" disabled><option value="drawdown">较此前收盘峰值回撤</option><option value="day_return">较参考前收盘价下跌</option></select></label>
-        <div class="timeline"><input id="seek" type="range" min="34200" max="54000" step="300" value="48900" aria-label="回放时间，拖动不会补发过去的弹窗" disabled><div><span>09:30</span><span>移动时间轴只定位，不补发历史弹窗</span><span>15:00</span></div></div>
+        <div class="timeline"><input id="seek" type="range" min="34200" max="54000" step="300" value="48900" aria-label="回放时间，拖动不会补发过去的弹窗" disabled><div><span>09:30</span><span>定位历史时点，不补发此前事件</span><span>15:00</span></div></div>
       </section>
 
       <div class="analysis-layout">
         <section class="market-panel" aria-labelledby="chart-heading">
-          <div class="market-heading"><div><span class="section-kicker">价格现场</span><h2 id="chart-heading"><span id="selected-symbol">000011</span><span class="subtle-label">5 分钟 K 线</span></h2></div><label class="search-box"><span aria-hidden="true">⌕</span><input id="symbol-search" type="search" inputmode="numeric" placeholder="搜索股票代码" aria-label="搜索八只样本股票"></label></div>
+          <div class="market-heading"><div><span class="section-kicker">行情走势</span><h2 id="chart-heading"><span id="selected-symbol">000011</span><span class="subtle-label">5 分钟 K 线</span></h2></div><label class="search-box"><span aria-hidden="true">⌕</span><input id="symbol-search" type="search" inputmode="numeric" placeholder="搜索股票代码" aria-label="搜索股票代码"></label></div>
           <div id="stock-tape" class="stock-tape" aria-label="选择股票"><span class="loading-text">正在载入八只股票的回放数据…</span></div>
           <div class="quote-row"><strong id="quote-price">—</strong><span id="quote-change" class="quote-change">—</span><span id="quote-reference">尚无已完成 K 线</span></div>
           <div class="chart-wrap"><svg id="price-chart" viewBox="0 0 1000 410" role="img" aria-label="历史价格与成交量图，仅显示回放时点已完成的 K 线"></svg><p id="chart-empty" hidden>当前时点尚无已完成 K 线，前进 5 分钟后显示。</p></div>
           <div class="chart-caption"><span><i class="legend-candle"></i>历史价格 / 成交量</span><span><i class="legend-threshold"></i>当前参考价 × 95%</span><span>鼠标悬停 K 线查看数值</span></div>
-          <div class="observation-note"><span class="small-dot"></span><p id="observation">加载后，点击“查看下一个下跌事件”可直接体验弹窗。所有八只股票会同时监测。</p></div>
+          <div class="observation-note"><span class="small-dot"></span><p id="observation">同时监测八只股票。点击“定位下一事件”查看下一次阈值跨越。</p></div>
         </section>
 
         <aside class="reason-panel" aria-labelledby="reason-heading">
-          <div class="reason-heading"><div><span class="section-kicker">事件解读</span><h2 id="reason-heading">三个候选原因</h2></div><span class="fiction-tag">全部虚构</span></div>
-          <div id="selected-event-summary" class="selected-event-summary"><span class="waiting-mark" aria-hidden="true">↘</span><h3>等待一次下跌穿越</h3><p>当已完成 K 线的收盘跌幅首次严格超过 5%，此处展示三个虚构原因。</p></div>
-          <div id="reason-list" class="reason-list"><div class="reason-placeholder"><span>01</span><div>候选原因待展示<i></i></div></div><div class="reason-placeholder"><span>02</span><div>模拟概率从高到低<i></i></div></div><div class="reason-placeholder"><span>03</span><div>不接入真实新闻数据<i></i></div></div></div>
-          <p class="probability-note">“模拟概率”仅用于呈现排序；三项合计 100%，不具有统计估计或置信度含义。</p>
+          <div class="reason-heading"><div><span class="section-kicker">事件解读</span><h2 id="reason-heading">三个候选原因</h2></div><span class="fiction-tag">预设情景</span></div>
+          <div id="selected-event-summary" class="selected-event-summary"><span class="waiting-mark" aria-hidden="true">↘</span><h3>等待事件触发</h3><p>收盘跌幅首次严格超过 5% 时，显示事件及三个预设候选原因。</p></div>
+          <div id="reason-list" class="reason-list"><div class="reason-placeholder"><span>01</span><div>候选原因待展示<i></i></div></div><div class="reason-placeholder"><span>02</span><div>示例概率从高到低<i></i></div></div><div class="reason-placeholder"><span>03</span><div>事件证据待接入<i></i></div></div></div>
+          <p class="probability-note">原因与概率为预设示例；三项合计 100% 仅用于排序展示，不代表统计估计或实际成因。</p>
         </aside>
       </div>
 
@@ -59,24 +59,24 @@
     </section>
 
     <section id="page-history" class="page" aria-labelledby="history-title" hidden>
-      <button class="back-button" data-page="monitor">← 返回事件回放</button><div class="page-title"><div><h1 id="history-title">事件记录</h1><p>记录本次打开网页期间触发的事件。所有候选原因与概率均为虚构。</p></div><button id="export" class="button" disabled>导出 JSON</button></div>
+      <button class="back-button" data-page="monitor">← 返回归因工作台</button><div class="page-title"><div><h1 id="history-title">事件记录</h1><p>记录事件时间、跌幅、计算口径与候选原因。归因内容及概率为预设示例。</p></div><button id="export" class="button" disabled>导出 JSON</button></div>
       <div class="history-info"><strong id="history-total">0 个事件</strong><span>切换日期或口径开启新一轮；刷新页面会清空本次记录。</span></div>
-      <div id="history-list" class="history-list"><p class="empty-state">尚无记录，返回回放页开始体验。</p></div>
+      <div id="history-list" class="history-list"><p class="empty-state">暂无事件记录，返回工作台开始回放。</p></div>
     </section>
 
     <section id="page-method" class="page" aria-labelledby="method-title" hidden>
-      <button class="back-button" data-page="monitor">← 返回事件回放</button><div class="page-title"><div><h1 id="method-title">这个演示如何工作</h1><p>观察已经发生的下跌，再展示可能的解释。当前版本展示流程，不判断真实成因。</p></div><span class="demo-label">公开研究演示</span></div>
+      <button class="back-button" data-page="monitor">← 返回归因工作台</button><div class="page-title"><div><h1 id="method-title">系统说明</h1><p>事件识别口径、数据来源与归因输出状态。</p></div><span class="demo-label">历史回放</span></div>
       <div class="method-grid">
-        <article class="method-main"><h2>价格与原因，来自不同层次</h2><div class="layer-row"><span class="layer-symbol real">价</span><div><h3>价格层：历史样本</h3><p>八只股票、2026 年 7 月的 23 个交易日，共 8,832 根五分钟 K 线。回放只逐步显示已完成的 K 线；这些是聚合行情，不是逐秒行情。</p></div></div><div class="layer-row"><span class="layer-symbol fiction">因</span><div><h3>解释层：人为编写的情景</h3><p>每次触发后，从虚构情景模板给出三个候选原因，例如业绩低于预期、行业监管收紧、资金集中卖出等。系统没有检索公告，没有财报、行业分类或新闻输入。这些描述不能当作对应股票的事实。</p></div></div><div class="layer-row"><span class="layer-symbol fiction">序</span><div><h3>排序层：模拟概率</h3><p>为演示排序，三个数字人为分配并合计 100%。它们不是训练结果、事件发生概率、因果贡献比例或经校准的置信度。</p></div></div>
-        <h2>“下跌超过 5%”怎样触发</h2><div class="formula-block"><span>日内回撤口径</span><code>当前收盘价 ÷ 日内此前已完成五分钟 K 线收盘价的最大值 − 1 &lt; −5%</code><span>参考前收口径</span><code>当前收盘价 ÷ 当日记录的参考前收盘价 − 1 &lt; −5%</code></div><p>以完成的五分钟 K 线为检查点，首次从阈值上方穿越到严格低于 −5% 时弹窗。一直低于阈值不会每五分钟重复弹窗；回升到阈值上方后，再次穿越可形成新事件。回撤口径使用此前 K 线的收盘峰值，不使用 K 线内最高价。图中虚线是当前参考价格对应的 −5% 水平。</p><p>移动时间轴或切换日期只重新定位，不补发之前的事件。“查看下一个下跌事件”会跨日期定位下一次穿越；到达样本末尾后，循环回到首次事件。参考前收盘价沿用样本记录，尚未加入复权与公司行动校正。</p>
+        <article class="method-main"><h2>数据来源与归因输出</h2><div class="layer-row"><span class="layer-symbol real">价</span><div><h3>行情数据</h3><p>八只股票、2026 年 7 月的 23 个交易日，共 8,832 根五分钟 K 线。回放只逐步显示已完成的 K 线；这些是聚合行情，不是逐秒行情。</p></div></div><div class="layer-row"><span class="layer-symbol fiction">因</span><div><h3>候选原因</h3><p>当前候选原因来自人为编写的情景模板，涵盖业绩、政策、行业传导及交易压力。公告、财报、行业分类和新闻尚未接入，所列原因未经事实核验。</p></div></div><div class="layer-row"><span class="layer-symbol fiction">序</span><div><h3>候选原因排序</h3><p>当前概率数值为人为设定，三项合计 100% 仅作为展示约定，不代表统计估计、因果贡献比例或经校准的置信度。</p></div></div>
+        <h2>事件识别规则</h2><div class="formula-block"><span>日内回撤口径</span><code>当前收盘价 ÷ 日内此前已完成五分钟 K 线收盘价的最大值 − 1 &lt; −5%</code><span>参考前收口径</span><code>当前收盘价 ÷ 当日记录的参考前收盘价 − 1 &lt; −5%</code></div><p>以完成的五分钟 K 线为检查点，首次从阈值上方穿越到严格低于 −5% 时弹窗。一直低于阈值不会每五分钟重复弹窗；回升到阈值上方后，再次穿越可形成新事件。回撤口径使用此前 K 线的收盘峰值，不使用 K 线内最高价。图中虚线是当前参考价格对应的 −5% 水平。</p><p>移动时间轴或切换日期只重新定位，不补发之前的事件。“定位下一事件”会跨日期定位下一次穿越；到达样本末尾后，循环回到首次事件。参考前收盘价沿用样本记录，尚未加入复权与公司行动校正。</p>
         </article>
-        <aside class="method-aside"><h2>从演示走向研究</h2><ul><li>接入带准确发布时间的公告、新闻及政策。</li><li>补充行业归属、市场和行业基准。</li><li>区分事件共现、模型解释与因果识别。</li><li>检验候选原因的证据质量及概率校准。</li></ul><div class="method-divider"></div><h3>访问与数据</h3><p>页面和八只股票数据均为公开静态文件，在浏览器内运行；AWS 关闭后仍可访问。无需登录，记录不会上传服务器。</p><a class="data-link" href="data/replay.json" download="attribution-replay-data.json">下载公开历史样本 ↗</a><p class="small-text">本页面用于研究流程与界面演示，不提供投资建议或真实事件的成因判断。</p></aside>
+        <aside class="method-aside"><h2>数据接入规划</h2><ul><li>接入带准确发布时间的公告、新闻及政策。</li><li>补充行业归属、市场和行业基准。</li><li>区分事件共现、模型解释与因果识别。</li><li>检验候选原因的证据质量及概率校准。</li></ul><div class="method-divider"></div><h3>访问与数据</h3><p>页面和八只股票数据均为公开静态文件，在浏览器内运行；AWS 关闭后仍可访问。无需登录，记录不会上传服务器。</p><a class="data-link" href="data/replay.json" download="attribution-replay-data.json">下载历史行情数据 ↗</a><p class="small-text">当前未接入实时新闻和公告证据，归因内容为预设示例。</p></aside>
       </div>
     </section>
-    <footer class="page-footer"><span>下跌归因实验室</span><span>价格来自历史样本；原因与概率全部虚构。</span></footer>
+    <footer class="page-footer"><span>市场事件归因系统</span><span>历史行情回放 / 归因原因与概率为预设示例</span></footer>
   </main>
 
-  <dialog id="event-dialog" aria-labelledby="popup-title" aria-describedby="popup-disclaimer"><div class="dialog-header"><span class="event-badge">下跌事件已触发</span><button id="close-dialog" class="close-button" aria-label="关闭弹窗">×</button></div><div class="dialog-title"><h2 id="popup-title">股票下跌超过 5%</h2><div id="popup-meta"></div></div><p class="popup-disclaimer" id="popup-disclaimer"><strong>以下三个原因与概率全部虚构。</strong>仅演示事件发生后的候选原因排序，没有真实新闻或公告证据。</p><div id="popup-reasons" class="popup-reasons"></div><div class="dialog-footer"><span id="popup-queue">回放已暂停，便于查看</span><button id="review-event" class="button primary">在工作台查看</button></div></dialog>
+  <dialog id="event-dialog" aria-labelledby="popup-title" aria-describedby="popup-disclaimer"><div class="dialog-header"><span class="event-badge">下跌事件已触发</span><button id="close-dialog" class="close-button" aria-label="关闭弹窗">×</button></div><div class="dialog-title"><h2 id="popup-title">股票下跌超过 5%</h2><div id="popup-meta"></div></div><p class="popup-disclaimer" id="popup-disclaimer"><strong>候选归因：预设情景。</strong>原因与概率由人工编写，未经真实公告、新闻或因果证据核验。</p><div id="popup-reasons" class="popup-reasons"></div><div class="dialog-footer"><span id="popup-queue">回放已暂停，便于查看</span><button id="review-event" class="button primary">在工作台查看</button></div></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>
