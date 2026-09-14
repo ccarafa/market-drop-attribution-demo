@@ -15,12 +15,22 @@ const REASONS=[
   {id:'liquidity',category:'交易压力',title:'集中卖出与流动性压力',description:'虚构情景：假设短时间集中卖出扩大价格冲击。当前展示并未识别真实资金身份或验证卖出动机。'},
   {id:'macro',category:'宏观消息',title:'风险偏好短时回落',description:'虚构情景：假设宏观消息影响市场风险偏好，带动相关资产卖出。没有接入对应新闻或市场因果证据。'}
 ];
-const PROFILES=[{indices:[0,1,2],weights:[60,25,15]},{indices:[1,2,5],weights:[55,28,17]},{indices:[3,4,6],weights:[52,31,17]},{indices:[4,0,5],weights:[48,33,19]},{indices:[5,6,2],weights:[58,24,18]},{indices:[2,1,3],weights:[50,30,20]}];
+const PROFILES=[[0,1,2],[1,2,5],[3,4,6],[4,0,5],[5,6,2],[2,1,3]];
+// Demo-only integer allocations: descending, sum to 100, no round tens.
+const WEIGHT_OPTIONS=[];
+for(let a=46;a<=67;a++)for(let b=19;b<=37;b++){
+  const c=100-a-b;
+  if(a>b&&b>c&&c>=7&&[a,b,c].every(x=>x%10!==0))WEIGHT_OPTIONS.push([a,b,c]);
+}
 export function simulatedReasons(symbol,date,seconds,basis){
   // Stable choice of a hand-written scenario is for repeatable UI demonstrations only.
   let h=0;for(const ch of `${symbol}|${date}|${seconds}|${basis}`)h=(Math.imul(h,31)+ch.charCodeAt(0))>>>0;
   const profile=PROFILES[h%PROFILES.length];
-  return profile.indices.map((i,k)=>({...REASONS[i],probability:profile.weights[k],simulated:true,probability_label:'模拟概率（人为设定）'}));
+  // Stable per-event mixing keeps replay, popup, history and export consistent.
+  let seed=Math.imul(h^(h>>>16),0x45d9f3b)>>>0;
+  seed=(seed^(seed>>>16))>>>0;
+  const weights=WEIGHT_OPTIONS[seed%WEIGHT_OPTIONS.length];
+  return profile.map((i,k)=>({...REASONS[i],probability:weights[k],simulated:true,probability_label:'Demo probability'}));
 }
 export function observe(bars,previousClose,basis){
   if(!['drawdown','day_return'].includes(basis))throw Error('跌幅口径无效');

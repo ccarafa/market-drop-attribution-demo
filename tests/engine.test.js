@@ -37,6 +37,22 @@ test('a simulated clock emits event immediately when the completed close becomes
   const e=new AttributionReplay(fixture([100,99,94]));e.seek(34800);e.setSpeed(60);e.play();
   const anchor=e.anchor;assert.equal(e.tick(anchor+4999).length,0);assert.equal(e.tick(anchor+5000).length,1);assert.equal(e.tick(anchor+5001).length,0);
 });
+
+test('Demo probabilities vary by event without round tens or replay drift',()=>{
+  const data=JSON.parse(readFileSync(new URL('../data/replay.json',import.meta.url),'utf8'));
+  const engine=new AttributionReplay(data),allocations=new Set();
+  for(const basis of ['drawdown','day_return'])for(const date of data.dates){
+    engine.setBasis(basis);engine.setDate(date);engine.seek(34200);
+    for(const event of engine.move(54000)){
+    const values=event.reasons.map(x=>x.probability);
+    assert.ok(values.every((v,i)=>Number.isInteger(v)&&v>0&&v%10!==0&&(!i||values[i-1]>v)));
+    assert.equal(values.reduce((a,b)=>a+b,0),100);
+    assert.deepEqual(event.reasons,simulatedReasons(event.symbol,event.date,event.seconds,basis));
+    allocations.add(values.join(','));
+    }
+  }
+  assert.ok(allocations.size>20);
+});
 test('real eight-stock dataset stays unchanged and catalog matches independent chronological detection',()=>{
   const raw=readFileSync(new URL('../data/replay.json',import.meta.url));
   const manifest=JSON.parse(readFileSync(new URL('../data/manifest.json',import.meta.url),'utf8'));

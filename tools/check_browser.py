@@ -65,6 +65,9 @@ def exercise():
     assert js("document.querySelectorAll('#popup-reasons .reason-item').length")==3
     probs=js("[...document.querySelectorAll('#popup-reasons .reason-probability strong')].map(x=>parseFloat(x.textContent))")
     assert probs==sorted(probs,reverse=True) and sum(probs)==100
+    assert all(p%10!=0 for p in probs)
+    assert all(x=="Demo" for x in js("[...document.querySelectorAll('#popup-reasons .reason-description')].map(x=>x.textContent.trim())"))
+    assert not any(x in js("document.getElementById('event-dialog').textContent") for x in ["模拟情景","模拟情形","预设情景","模拟概率"])
     assert all('Demo' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
     assert all('概率' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
     assert js("document.getElementById('popup-disclaimer').textContent.trim()")=='Demo'
