@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "file": "replay.json",
+  "sha256": "e7cb03f40a47fa2461cfa947666b6adbe7cce560f74b1dcd9fd47c86d988d9d0",
+  "bytes": 1105177,
+  "stocks": 8,
+  "trading_dates": 23,
+  "stock_days": 184,
+  "bars": 8832,
+  "daily_reference_rows": 184,
+  "date_range": [
+    20260701,
+    20260731
+  ],
+  "bar_interval_seconds": 300,
+  "timezone": "Asia/Shanghai",
+  "crossing_threshold": -0.05,
+  "boundary_tolerance": 1e-12,
+  "crossings": {
+    "drawdown": {
+      "count": 80,
+      "first": {
+        "symbol": "688309",
+        "date": 20260701,
+        "seconds": 38400,
+        "time": "10:40",
+        "change": -0.05124271458959584,
+        "close": 61.84000015258789
+      }
+    },
+    "day_return": {
+      "count": 74,
+      "first": {
+        "symbol": "600367",
+        "date": 20260701,
+        "seconds": 34800,
+        "time": "09:40",
+        "change": -0.05196250503584898,
+        "close": 59.65999984741211
+      }
+    }
+  },
+  "starter_case": {
+    "date": 20260727,
+    "symbol": "000011",
+    "basis": "drawdown",
+    "start_seconds": 48900,
+    "event_seconds": 49200
+  },
+  "genuine_historical_prices": true,
+  "fictional_causes_and_probabilities": true,
+  "model_packages_included": false,
+  "credentials_included": false,
+  "aws_dependency": false
+}
