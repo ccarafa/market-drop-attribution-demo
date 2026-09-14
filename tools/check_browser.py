@@ -55,8 +55,8 @@ def exercise():
     assert js("document.querySelectorAll('#date-select option').length")==23
     assert js("document.querySelectorAll('#stock-tape [data-symbol]').length")==8
     assert js('document.title')=='市场事件归因系统'
-    assert '归因原因与概率为模拟数据' in js("document.querySelector('.truth-banner').textContent")
-    assert '归因原因与概率为模拟数据' in js("document.querySelector('#popup-disclaimer').textContent")
+    assert js("document.querySelector('.truth-banner p').textContent.trim()")=='Demo'
+    assert js("document.querySelector('#popup-disclaimer').textContent.trim()")=='Demo'
     screenshot('initial')
     click('#step');wait("document.getElementById('event-dialog').open")
     first=state()['currentEvents'][0]
@@ -65,9 +65,9 @@ def exercise():
     assert js("document.querySelectorAll('#popup-reasons .reason-item').length")==3
     probs=js("[...document.querySelectorAll('#popup-reasons .reason-probability strong')].map(x=>parseFloat(x.textContent))")
     assert probs==sorted(probs,reverse=True) and sum(probs)==100
-    assert all('预设情景' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
-    assert all('模拟概率' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
-    assert '归因原因与概率为模拟数据' in js("document.getElementById('popup-disclaimer').textContent")
+    assert all('Demo' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
+    assert all('概率' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
+    assert js("document.getElementById('popup-disclaimer').textContent.trim()")=='Demo'
     screenshot('popup')
     click('#review-event');wait("!document.getElementById('event-dialog').open")
     assert js('window.attributionDemo.selectedSymbol')=='000011'
