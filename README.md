@@ -22,10 +22,12 @@
 
 页面为静态站点，使用相对路径部署于 GitHub Pages，不依赖运行中的云端实例。
 
+官方 API 接入正在准备，当前没有完成带有效令牌的业务调用，首页仍为上述本地历史数据。[连接配置说明](./docs/DATAYES_CONNECTION.md)列出供应商需确认的权限、Secret 配置和手动小范围检查。`DataYes connection check` 工作流只有手动触发，单次最多查询一个股票日；通过一次检查也不等于取得全年全市场或完成网站数据源替换。
+
 ```sh
 python -m http.server 8080
 npm test
-python -m unittest discover -s tests -p test_real_study.py
+python -m unittest discover -s tests -p 'test_*.py'
 python tools/check_real_browser.py
 python tools/check_browser.py
 ```

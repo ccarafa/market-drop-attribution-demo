@@ -19,6 +19,9 @@ BASE_FILES = [
     'tests/study.test.js', 'tests/test_real_study.py', 'tools/prepare_data.py',
     'tools/build_real_study.py', 'tools/check_browser.py', 'tools/check_real_browser.py',
     'tools/publish.py', '.github/workflows/checks.yml',
+    'tools/datayes_client.py', 'tools/check_datayes_connection.py',
+    'tests/test_datayes_client.py', 'tests/test_datayes_connection.py',
+    'docs/DATAYES_CONNECTION.md', '.github/workflows/datayes-connection.yml',
 ]
 ENV = os.environ.copy()
 ENV['PYTHONWARNINGS'] = 'ignore'
@@ -117,7 +120,7 @@ def main() -> None:
     git('config', 'user.email', 'project@localhost')
     git('add', '--', *files)
     if git('diff', '--cached', '--quiet', check=False).returncode:
-        git('commit', '-m', 'Publish daily historical event evidence and retain separate demo')
+        git('commit', '-m', 'Publish verified attribution site and data connection tools')
     git('-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential', 'push', 'origin', 'HEAD:main')
     commit = git('rev-parse', 'HEAD').stdout.strip()
     gh('repo', 'edit', repository, '--description',
