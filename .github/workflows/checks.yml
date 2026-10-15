@@ -1,4 +1,4 @@
-name: Attribution demo checks
+name: Attribution evidence checks
 on: [push, pull_request]
 jobs:
   test:
@@ -9,3 +9,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s tests -p test_real_study.py

@@ -1,5 +1,5 @@
 """Check the static attribution demo in Edge under a project Pages subpath."""
-import base64,json,os,shutil,subprocess,sys,tempfile,threading,time,urllib.request
+import base64,hashlib,json,os,shutil,subprocess,sys,tempfile,threading,time,urllib.request
 from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -7,6 +7,10 @@ import websocket
 
 ROOT=Path(__file__).resolve().parents[1];OUT=ROOT/'.runtime';OUT.mkdir(exist_ok=True)
 PREFIX='/market-drop-attribution-demo/'
+def asset_hashes():
+    files=[ROOT/'demo.html',ROOT/'data/replay.json',*sorted((ROOT/'assets').glob('*.js')),*sorted((ROOT/'assets').glob('*.css'))]
+    return {file.relative_to(ROOT).as_posix():hashlib.sha256(file.read_bytes()).hexdigest() for file in files if file.name in {'demo.html','replay.json','app.js','engine.js','style.css'}}
+initial_asset_hashes=asset_hashes()
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self,*args,**kw):super().__init__(*args,directory=str(ROOT),**kw)
     def do_GET(self):
@@ -19,6 +23,11 @@ class Handler(SimpleHTTPRequestHandler):
 server=ThreadingHTTPServer(('127.0.0.1',0),Handler)
 threading.Thread(target=server.serve_forever,daemon=True).start()
 url=sys.argv[1] if len(sys.argv)>1 else f'http://127.0.0.1:{server.server_port}'+PREFIX
+parts=urlsplit(url)
+if parts.path.endswith('/index.html'):
+    url=parts._replace(path=parts.path[:-10]+'demo.html').geturl()
+elif not parts.path.endswith('.html'):
+    url=parts._replace(path=parts.path.rstrip('/')+'/demo.html').geturl()
 site_origin=urlsplit(url).netloc
 profile=Path(tempfile.mkdtemp(prefix='attribution-browser-')).resolve()
 browser=Path(os.environ.get('PROGRAMFILES(X86)','C:/Program Files (x86)'))/'Microsoft/Edge/Application/msedge.exe'
@@ -147,7 +156,8 @@ try:
     network=[x for x in requests if x.startswith(('http:','https:'))]
     assert all(urlsplit(x).netloc==site_origin for x in network),network
     assert not any('/api/' in urlsplit(x).path for x in network),network
-    report={'status':'passed','deployment':'public_https' if url.startswith('https:') else 'local_subpath',**checks,'api_network_requests':0,'javascript_errors':errors}
+    assert asset_hashes()==initial_asset_hashes,'Site assets changed during browser checks; rerun checks.'
+    report={'status':'passed','deployment':'public_https' if url.startswith('https:') else 'local_subpath',**checks,'api_network_requests':0,'javascript_errors':errors,'asset_sha256':initial_asset_hashes}
     suffix='browser-live' if url.startswith('https:') else 'browser'
     (OUT/(suffix+'.json')).write_text(json.dumps(report,indent=2),encoding='utf-8');print(json.dumps(report))
 finally:
