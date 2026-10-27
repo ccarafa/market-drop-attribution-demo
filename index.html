@@ -2,57 +2,65 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#4354b9">
-  <meta name="description" content="2026 年 7 月真实股票日汇总数据的历史事件研究。查看下跌事件、同期样本表现、量价证据及数据质量。">
-  <title>市场事件归因系统 | 历史事件证据</title>
-  <link rel="stylesheet" href="assets/study.css?v=20261015-1"><script type="module" src="assets/study.js?v=20261015-1"></script>
+  <meta name="description" content="2026 年 7 月 A 股日度异动的归因工作台：市场、行业与个股特有分解，公告、新闻与成交盘口证据，以及样本内校准的原因概率。">
+  <title>市场事件归因系统 | 事件归因工作台</title>
+  <link rel="stylesheet" href="assets/study.css?v=20261028-1"><link rel="stylesheet" href="assets/attribution.css?v=20261028-1"><script type="module" src="assets/attribution.js?v=20261028-1"></script>
 </head>
 <body>
-  <a href="#study-workspace" class="skip-link">跳到事件工作台</a>
+  <a href="#attr-workspace" class="skip-link">跳到归因工作台</a>
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="市场事件归因系统首页"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 30 30"><path d="M5 9h6l5 11h9M20 15l5 5-5 5"/></svg></span><span>市场事件<strong>归因系统</strong></span></a>
-    <nav aria-label="主导航"><a href="#study-workspace" class="nav-current">事件分析</a><a href="#study-method">数据与口径</a><a href="demo.html" id="open-demo">五分钟演示 <span class="demo-chip">Demo</span></a></nav>
+    <nav aria-label="主导航"><a href="#attr-workspace" class="nav-current">事件归因</a><a href="evidence.html">历史事件证据</a><a href="demo.html" id="open-demo">五分钟演示 <span class="demo-chip">Demo</span></a></nav>
     <span class="header-note"><i aria-hidden="true"></i>真实历史数据</span>
   </header>
   <main class="page-shell">
-    <div class="page-intro"><div><h1>事件证据工作台</h1><p>从实际价格变化出发，核查同期样本与量价证据。</p></div><div class="archive-period"><span>数据覆盖区间</span><strong>2026.07.01 — 07.31</strong><small>日终历史观察</small></div></div>
-    <div class="scope-note"><span class="note-icon" aria-hidden="true">i</span><p>本页使用 2026 年 7 月的本地真实日汇总记录。展示统计关联与数据质量，不提供新闻、行业原因或因果概率。</p><a href="#study-method">数据边界</a></div>
+    <div class="page-intro"><div><h1>事件归因工作台</h1><p>每一次日度异动都给出原因：公告、新闻、行业与市场共同因素，或成交盘口本身。</p></div><div class="archive-period"><span>数据覆盖区间</span><strong>2026.07.01 — 07.31</strong><small>日终历史观察</small></div></div>
+    <div class="scope-note"><span class="note-icon" aria-hidden="true">i</span><p>原因概率是 2026 年 7 月样本内的经验关联：按同类证据在异动日与非异动日出现频率之比校准，不是因果证明，也未经样本外验证。公告与新闻只展示标题、时间与来源链接。</p><a href="#attr-method">方法与边界</a></div>
     <section class="coverage-strip" aria-label="数据覆盖范围">
-      <div><span>股票覆盖</span><strong id="study-stock-total">—</strong><small>只</small></div><div><span>交易日期</span><strong id="study-date-total">—</strong><small>日</small></div><div><span>股票日记录</span><strong id="study-row-total">—</strong><small>条</small></div><div><span>原始下跌事件</span><strong id="study-event-total">—</strong><small>个</small></div><div><span>通过口径筛查</span><strong id="study-screened-total">—</strong><small>个</small></div>
+      <div><span>股票覆盖</span><strong id="attr-stock-total">—</strong><small>只</small></div><div><span>交易日期</span><strong id="attr-date-total">—</strong><small>日</small></div><div><span>异动事件（超过 2%）</span><strong id="attr-event-total">—</strong><small>个</small></div><div><span>公告元数据</span><strong id="attr-anno-total">—</strong><small>条</small></div><div><span>财经文章</span><strong id="attr-news-total">—</strong><small>篇</small></div>
     </section>
-    <div id="study-status" class="load-status" role="status" aria-live="polite">正在载入历史事件与数据说明…</div><button id="study-retry" class="button" hidden>重新加载</button>
-    <div class="workspace" id="study-workspace" tabindex="-1">
-      <aside class="event-ledger" aria-labelledby="ledger-heading">
-        <div class="ledger-heading"><h2 id="ledger-heading">下跌事件</h2><span class="rule-chip">严格低于 −5%</span></div>
+    <div id="attr-status" class="load-status" role="status" aria-live="polite">正在载入归因索引…</div><button id="attr-retry" class="button" hidden>重新加载</button>
+    <div class="workspace" id="attr-workspace" tabindex="-1">
+      <aside class="event-ledger" aria-labelledby="attr-ledger-heading">
+        <div class="ledger-heading"><h2 id="attr-ledger-heading">异动事件</h2><span class="rule-chip" id="attr-rule-chip">日收益超过阈值</span></div>
         <div class="event-filters">
-          <label class="search-field" for="study-search"><span>股票代码</span><div><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="study-search" type="search" placeholder="搜索代码，例如 000011" autocomplete="off" inputmode="numeric" disabled></div></label>
-          <div class="filter-pair"><label>交易日期<select id="study-date" disabled><option value="">全部日期</option></select></label><label>口径筛查<select id="study-quality" disabled><option value="all">全部事件</option><option value="clean">通过筛查</option><option value="flagged">待核查</option></select></label></div>
-          <div class="sort-row"><label for="study-sort">排序</label><select id="study-sort" disabled><option value="date_desc">日期由近到远</option><option value="decline">跌幅由大到小</option><option value="volume">量比由高到低</option></select><button id="study-reset" class="text-button" disabled>重置</button></div>
+          <div class="filter-pair"><label>交易日期<select id="attr-date" disabled></select></label><label>方向<select id="attr-direction" disabled><option value="down">下跌</option><option value="up">上涨</option><option value="all">全部</option></select></label></div>
+          <div class="filter-pair"><label>幅度阈值<select id="attr-threshold" disabled><option value="0.05">超过 5%</option><option value="0.03">超过 3%</option><option value="0.02">超过 2%</option></select></label><label>行业<select id="attr-industry" disabled><option value="">全部行业</option></select></label></div>
+          <label class="search-field" for="attr-search"><span>股票代码或名称</span><div><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="attr-search" type="search" placeholder="例如 300214 或 日科化学" autocomplete="off" disabled></div></label>
+          <div class="sort-row"><label for="attr-sort">排序</label><select id="attr-sort" disabled><option value="magnitude">幅度由大到小</option><option value="specific">个股特有占比</option><option value="top_cause">主因概率</option><option value="symbol">代码</option></select><button id="attr-reset" class="text-button" disabled>重置</button></div>
         </div>
-        <div class="ledger-meta"><output id="study-event-count" aria-live="polite">等待数据</output><span>日期 / 当日跌幅</span></div>
-        <div id="study-event-list" class="event-list" role="group" aria-label="可选择的下跌事件"><div class="ledger-empty">载入后可按股票与日期筛选。</div></div>
-        <div class="pagination"><button id="study-prev" class="page-button" aria-label="上一页事件" disabled>上一页</button><output id="study-page">—</output><button id="study-next" class="page-button" aria-label="下一页事件" disabled>下一页</button></div><p class="keyboard-hint">聚焦事件后，可用 ↑ ↓ 切换。</p>
+        <div class="ledger-meta"><output id="attr-event-count" aria-live="polite">等待数据</output><span>代码 / 当日涨跌幅</span></div>
+        <div id="attr-event-list" class="event-list" role="group" aria-label="可选择的异动事件"><div class="ledger-empty">载入后可按日期、方向、阈值和行业筛选。</div></div>
+        <div class="pagination"><button id="attr-prev" class="page-button" aria-label="上一页事件" disabled>上一页</button><output id="attr-page">—</output><button id="attr-next" class="page-button" aria-label="下一页事件" disabled>下一页</button></div><p class="keyboard-hint">聚焦事件后，可用 ↑ ↓ 切换。</p>
       </aside>
-      <section class="analysis-panel" aria-labelledby="selection-heading">
-        <div id="study-selection" class="selection-header"><div><span class="section-label">所选事件</span><h2 id="selection-heading">等待历史数据</h2><p>选择左侧事件，查看可追溯的观测证据。</p></div></div>
-        <div id="study-quality-flags" class="quality-note" hidden></div>
-        <section class="trajectory-panel" aria-labelledby="trajectory-heading">
-          <div class="panel-heading"><div><h3 id="trajectory-heading">截至事件日的价格路径</h3><p id="study-history-caption">末次快照价格与当日跌幅</p></div><div class="chart-legend"><span><i class="price-line"></i>末次快照价格</span><span><i class="return-bar"></i>当日涨跌幅</span></div></div>
-          <div id="study-chart-wrap" class="chart-wrap"><svg id="study-chart" role="img" aria-label="历史数据尚未载入" viewBox="0 0 800 310"></svg><p id="study-chart-message" class="chart-message">正在等待所选股票数据</p></div>
-          <div class="chart-foot"><span>图形仅含事件日及此前的已观察交易日。</span><span>当日数据在 16:00 或更晚可用</span></div>
+      <section class="analysis-panel" aria-labelledby="attr-selection-heading">
+        <div id="attr-selection" class="selection-header"><div><span class="section-label">所选事件</span><h2 id="attr-selection-heading">等待归因数据</h2><p>选择左侧事件，查看原因分解与证据。</p></div></div>
+        <div id="attr-quality" class="quality-note" hidden></div>
+        <section class="decomposition-panel" aria-labelledby="attr-decomp-heading">
+          <div class="panel-heading"><div><h3 id="attr-decomp-heading">收益分解</h3><p id="attr-decomp-caption">市场共同因素、行业共同因素与个股特有部分</p></div></div>
+          <div id="attr-share-bar" class="share-bar" role="img" aria-label="收益分解尚未载入"></div>
+          <dl id="attr-decomp-table" class="decomp-table"></dl>
         </section>
-        <div class="evidence-heading"><h3>可核查的观测证据</h3><span>描述变化，不估计原因概率</span></div><div id="study-evidence" class="evidence-grid"><p class="evidence-waiting">选择事件后展示样本比较、成交量与流动性指标。</p></div>
-        <div class="record-footer"><p id="study-availability">数据可用时间将随事件显示。</p><button id="study-export" class="button export-button" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m-4-4 4 4 4-4M3 12v5h14v-5"/></svg>导出本事件证据</button></div>
+        <section class="causes-panel" aria-labelledby="attr-causes-heading">
+          <div class="evidence-heading"><h3 id="attr-causes-heading">可能原因与概率</h3><span>按样本校准的证据权重分配个股特有部分</span></div>
+          <ol id="attr-causes" class="cause-list"><li class="evidence-waiting">选择事件后展示原因列表。</li></ol>
+        </section>
+        <section class="evidence-panel" aria-labelledby="attr-evidence-heading">
+          <div class="evidence-heading"><h3 id="attr-evidence-heading">证据明细</h3><span>只列标题、时间与来源，不含正文</span></div>
+          <div id="attr-evidence" class="evidence-columns"><p class="evidence-waiting">选择事件后展示公告、文章与盘口证据。</p></div>
+        </section>
+        <div class="record-footer"><p id="attr-availability">数据可用时间将随事件显示。</p><button id="attr-export" class="button export-button" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m-4-4 4 4 4-4M3 12v5h14v-5"/></svg>导出本事件归因</button></div>
       </section>
     </div>
-    <section id="study-method" class="method-section" aria-labelledby="method-heading">
-      <div class="method-title"><div><h2 id="method-heading">数据与计算口径</h2><p>每个结论限定在实际覆盖的样本与观察时点内。</p></div><a href="#study-workspace" class="text-link">返回事件工作台</a></div>
+    <section id="attr-method" class="method-section" aria-labelledby="attr-method-heading">
+      <div class="method-title"><div><h2 id="attr-method-heading">方法与边界</h2><p>每个概率都能追溯到样本计数与证据时间。</p></div><a href="#attr-workspace" class="text-link">返回归因工作台</a></div>
       <div class="method-layout">
-        <article><h3>事件定义与数据来源</h3><p>股票当日末次有效价格除以当日记录的参考前收盘价，再减去 1；结果严格低于 −5%（边界容差 10⁻¹²）即记录一个日事件。同一股票的不同交易日分别计数。</p><div class="formula">当日跌幅 = 当日末价 ÷ 参考前收盘价 − 1</div><p>来源为项目已有的逐笔快照处理结果及股票日汇总。这里不是新下载的完整数据库，不包含实时行情；当前样本日期为 2026 年 7 月，不能代表最近一年。</p><p id="study-provenance">载入后显示记录数量及来源摘要。</p><a href="docs/REAL_DATA_METHOD.md" class="text-link">完整研究说明</a></article>
-        <article><h3>比较基准与先前窗口</h3><p>样本基准为同日通过口径筛查、且排除所选股票后的股票收益中位数。它是本研究样本的统计量，不是官方指数、行业基准或可投资组合。</p><p>成交量与价差的基准取此前 5 个可用交易日观察的中位数，不含事件日。窗口内有效数不足 5 时，不展示比值；没有将缺失值补为零。盘口失衡使用绝对值的变化，不据此识别资金身份。</p><p>本页仅展示截至事件日的历史路径。日汇总包含全天观察，可用时间取 16:00 与最后快照时刻中的较晚者；不作为日内预警。</p></article>
-        <article><h3>口径筛查与解释边界</h3><p>参考前收与上一观测日末价相差超过 1%、价格无效、或收益绝对值超过 50% 的记录不进入筛查后基准。缺少上一观测日时仍可保留，但显式标记连续性未核查。</p><p>原始事件保留供审计。通过筛查不代表已完成复权、公司行动或真实事件原因核实。参考价异常、样本覆盖和历史不足均在事件中显示。</p><p>尚未接入匹配日期的公告、新闻、行业归属与公司行动证据。本版不提供三个候选原因、原因概率或因果分解；旧版虚构情景仅在独立的 <a href="demo.html">Demo 页面</a>保留。</p></article>
+        <article><h3>事件与收益分解</h3><p>以当日末次有效价格相对参考前收盘的收益为准，严格超过 2%、3% 或 5%（边界容差 10⁻¹²）记为异动，涨跌分别统计。</p><div class="formula">个股收益 = 市场中位数 + （行业中位数 − 市场中位数） + 个股特有部分</div><p>市场中位数为同日通过口径筛查、剔除本股的样本收益中位数；行业中位数为同一申万一级行业、剔除本股的中位数，行业样本不足 8 只时不计算行业层。同向部分按幅度占比折算为市场与行业份额，其余为个股特有部分。</p></article>
+        <article><h3>证据窗口与概率</h3><p>公告按发布时间落入四个窗口：前一交易日收盘后至当日开盘前、当日交易时段、当日收盘后（只作事后解释）、此前 2 至 5 个交易日。财经文章按本股标签、行业关键词与监管关键词归类。</p><p>对每种证据，在全部筛查后股票日中统计异动日与非异动日的出现频率之比 LR，取 1 − 1/LR 作为该证据可归因的份额，按比例分配个股特有部分。成交盘口类证据始终保留一个最低权重，因此没有公开信息的事件仍会给出成交与盘口原因。</p><p id="attr-calibration-note">载入后显示校准样本规模。</p><a href="docs/ATTRIBUTION_METHOD.md" class="text-link">完整方法说明</a></article>
+        <article><h3>边界与限制</h3><ul id="attr-limitations" class="limitation-list"></ul></article>
       </div>
     </section>
-    <footer class="site-footer"><span>市场事件归因系统 <span class="footer-separator">/</span> 历史事件证据</span><span>2026 年 7 月样本 <span class="footer-separator">/</span> 可追溯事件证据</span></footer>
-  </main><div id="study-toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <footer class="site-footer"><span>市场事件归因系统 <span class="footer-separator">/</span> 事件归因工作台</span><span>2026 年 7 月样本 <span class="footer-separator">/</span> 样本内经验关联</span></footer>
+  </main><div id="attr-toast" class="toast" role="status" aria-live="polite" hidden></div>
 </body>
 </html>

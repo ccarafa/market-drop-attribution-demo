@@ -24,7 +24,7 @@ PREFIX = '/market-drop-attribution-demo/'
 
 
 def asset_hashes():
-    files = [ROOT / 'index.html', ROOT / 'demo.html', ROOT / 'data/study.json',
+    files = [ROOT / 'evidence.html', ROOT / 'index.html', ROOT / 'demo.html', ROOT / 'data/study.json',
              *sorted((ROOT / 'assets').glob('*.js')), *sorted((ROOT / 'assets').glob('*.css')),
              *sorted((ROOT / 'data/series').glob('*.json'))]
     return {file.relative_to(ROOT).as_posix(): hashlib.sha256(file.read_bytes()).hexdigest()
@@ -55,6 +55,8 @@ class Handler(SimpleHTTPRequestHandler):
 server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 url = sys.argv[1] if len(sys.argv) > 1 else f'http://127.0.0.1:{server.server_port}{PREFIX}'
+if not url.endswith('.html'):
+    url = url.rstrip('/') + '/evidence.html'
 site_origin = urlsplit(url).netloc
 profile = Path(tempfile.mkdtemp(prefix='attribution-real-browser-')).resolve()
 browser = Path(os.environ.get('PROGRAMFILES(X86)', 'C:/Program Files (x86)')) / 'Microsoft/Edge/Application/msedge.exe'
@@ -288,6 +290,11 @@ def exercise():
     assert js("document.querySelector('.truth-banner p').textContent.trim()") == 'Demo'
     assert js("document.querySelector('#return-study')!==null")
     click('#return-study')
+    # The demo returns to the site homepage, which is now the attribution workbench.
+    wait("window.attributionCauses?.selected && document.querySelector('#attr-status').hidden")
+    home = js('location.pathname')
+    assert home.endswith('/index.html') or home.endswith('/'), home
+    cdp('Page.navigate', {'url': url})
     ready()
     return {
         'stocks': summary['stocks'], 'dates': summary['dates'],

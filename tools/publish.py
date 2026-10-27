@@ -22,7 +22,19 @@ BASE_FILES = [
     'tools/datayes_client.py', 'tools/check_datayes_connection.py',
     'tests/test_datayes_client.py', 'tests/test_datayes_connection.py',
     'docs/DATAYES_CONNECTION.md', '.github/workflows/datayes-connection.yml',
+    'evidence.html', 'assets/attribution.css', 'assets/attribution.js',
+    'data/attribution/index.json', 'docs/ATTRIBUTION_METHOD.md',
+    'tools/attribution_taxonomy.py', 'tools/build_attribution.py',
+    'tools/check_attribution_browser.py', 'tools/validate.py', 'tests/test_attribution.py',
 ]
+
+
+def publication_files() -> list[str]:
+    files = BASE_FILES + sorted(path.relative_to(ROOT).as_posix()
+                               for path in (ROOT / 'data/series').glob('[0-9].json'))
+    files += sorted(path.relative_to(ROOT).as_posix()
+                    for path in (ROOT / 'data/attribution/events').glob('2026[0-9][0-9][0-9][0-9]-[235].json'))
+    return files
 ENV = os.environ.copy()
 ENV['PYTHONWARNINGS'] = 'ignore'
 ENV.pop('GH_TOKEN', None)
@@ -78,10 +90,11 @@ def main() -> None:
     if not pages.get('https_enforced'):
         raise RuntimeError('HTTPS must be enforced before publication')
 
-    files = BASE_FILES + sorted(path.relative_to(ROOT).as_posix()
-                               for path in (ROOT / 'data/series').glob('[0-9].json'))
-    if not (ROOT / 'data/series').is_dir() or len(files) == len(BASE_FILES):
+    files = publication_files()
+    if not (ROOT / 'data/series').is_dir() or not any(name.startswith('data/series/') for name in files):
         raise RuntimeError('History shards missing')
+    if sum(name.startswith('data/attribution/events/') for name in files) != 69:
+        raise RuntimeError('Attribution shards missing')
     for filename in files:
         path = ROOT / filename
         if not path.is_file():
@@ -93,7 +106,7 @@ def main() -> None:
     if unexpected:
         raise RuntimeError('Unexpected tracked files')
 
-    for filename in ['browser.json', 'real-browser.json']:
+    for filename in ['browser.json', 'real-browser.json', 'causes-browser.json']:
         report = json.loads((ROOT / '.runtime' / filename).read_text(encoding='utf-8'))
         if report.get('status') != 'passed' or report.get('deployment') != 'local_subpath':
             raise RuntimeError('Local browser verification missing: ' + filename)
@@ -120,16 +133,18 @@ def main() -> None:
     git('config', 'user.email', 'project@localhost')
     git('add', '--', *files)
     if git('diff', '--cached', '--quiet', check=False).returncode:
-        git('commit', '-m', 'Publish verified attribution site and data connection tools')
+        git('commit', '-m', 'Publish attribution workbench with calibrated causes from July 2026 evidence\n\n'
+            'Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>')
     git('-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential', 'push', 'origin', 'HEAD:main')
     commit = git('rev-parse', 'HEAD').stdout.strip()
     gh('repo', 'edit', repository, '--description',
-       '市场事件归因系统：历史日度事件、同期样本比较、量价证据与数据质量核查')
+       '市场事件归因系统：日度异动的市场、行业与个股特有分解，公告、新闻与成交盘口证据，样本内校准的原因概率')
     result = {'status': 'pushed_waiting_pages', 'repository': repository,
               'url': pages['html_url'], 'commit': commit,
               'study_sha256': sha(ROOT / 'data/study.json'),
               'replay_sha256': sha(ROOT / 'data/replay.json'),
-              'data_scope': '2026-07 local historical daily evidence',
+              'attribution_index_sha256': sha(ROOT / 'data/attribution/index.json'),
+              'data_scope': '2026-07 local historical daily evidence with provider announcement and finance-article metadata 2026-06-22..2026-08-03',
               'all_new_provider_data_downloaded': False}
     (ROOT / '.runtime' / 'deployment.json').write_text(
         json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
