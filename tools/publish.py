@@ -26,6 +26,7 @@ BASE_FILES = [
     'data/attribution/index.json', 'docs/ATTRIBUTION_METHOD.md',
     'tools/attribution_taxonomy.py', 'tools/build_attribution.py',
     'tools/check_attribution_browser.py', 'tools/validate.py', 'tests/test_attribution.py',
+    'data/replay_evidence.json', 'tools/build_replay_evidence.py',
 ]
 
 
@@ -133,7 +134,7 @@ def main() -> None:
     git('config', 'user.email', 'project@localhost')
     git('add', '--', *files)
     if git('diff', '--cached', '--quiet', check=False).returncode:
-        git('commit', '-m', 'Publish attribution workbench with calibrated causes from July 2026 evidence\n\n'
+        git('commit', '-m', 'Show real time-stamped evidence with source links for every replay event\n\n'
             'Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>')
     git('-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential', 'push', 'origin', 'HEAD:main')
     commit = git('rev-parse', 'HEAD').stdout.strip()

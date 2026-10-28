@@ -1,37 +1,43 @@
-// Historical threshold detection with explicitly fictional explanation scenarios.
-export const DISCLAIMER='虚构归因演示：原因和概率均为人为编写，未接入真实新闻、行业或财报，不能作为事实或因果结论。';
+// Historical threshold detection with real, time-stamped evidence for every event.
+export const DISCLAIMER='原因与概率来自日终归因（2026 年 7 月样本内经验关联），证据按事件时点区分“事件前已知”与“事后披露”；不是因果证明。';
 export const THRESHOLD=-0.05;
 const TOLERANCE=1e-12;
 export const closeSeconds=b=>(b.session===0?34200:46800)+(b.bar+1)*300;
 export const timeText=s=>[Math.floor(s/3600),Math.floor(s%3600/60),Math.floor(s%60)].map(x=>String(x).padStart(2,'0')).join(':');
 const below=x=>Number.isFinite(x)&&x<THRESHOLD-TOLERANCE;
 const finitePositive=x=>typeof x==='number'&&Number.isFinite(x)&&x>0;
-const REASONS=[
-  {id:'earnings',category:'公司公告',title:'财报表现低于市场预期',description:'虚构情景：假设事件前刚发布的财报显示利润低于预期，市场下调估值。没有核验该股票的真实公告或财务表现。'},
-  {id:'regulation',category:'政策监管',title:'行业监管政策趋严',description:'虚构情景：假设相关监管部门刚提出更严格的经营要求，投资者担忧未来盈利。未接入实际政策或股票行业归属。'},
-  {id:'spillover',category:'行业传导',title:'同行下跌引发情绪传导',description:'虚构情景：假设某家同行先出现负面消息，卖压随后扩散。未核验同行名单、消息时间或传导关系。'},
-  {id:'guidance',category:'经营公告',title:'经营展望被下调',description:'虚构情景：假设公司刚在经营公告中下调后续收入展望，投资者调整预期。此处没有对应的真实公告。'},
-  {id:'demand',category:'商业消息',title:'需求与订单预期转弱',description:'虚构情景：假设出现需求放缓或订单预期变化的商业消息，引发短期重新定价。没有核验任何具体客户或订单。'},
-  {id:'liquidity',category:'交易压力',title:'集中卖出与流动性压力',description:'虚构情景：假设短时间集中卖出扩大价格冲击。当前展示并未识别真实资金身份或验证卖出动机。'},
-  {id:'macro',category:'宏观消息',title:'风险偏好短时回落',description:'虚构情景：假设宏观消息影响市场风险偏好，带动相关资产卖出。没有接入对应新闻或市场因果证据。'}
-];
-const PROFILES=[[0,1,2],[1,2,5],[3,4,6],[4,0,5],[5,6,2],[2,1,3]];
-// Demo-only integer allocations: descending, sum to 100, no round tens.
-const WEIGHT_OPTIONS=[];
-for(let a=46;a<=67;a++)for(let b=19;b<=37;b++){
-  const c=100-a-b;
-  if(a>b&&b>c&&c>=7&&[a,b,c].every(x=>x%10!==0))WEIGHT_OPTIONS.push([a,b,c]);
+export const isoAt=(date,seconds)=>{const d=String(date);return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}T${timeText(seconds).slice(0,5)}+08:00`;};
+const median=values=>{const v=[...values].sort((a,b)=>a-b);return v.length?(v.length%2?v[(v.length-1)/2]:(v[v.length/2-1]+v[v.length/2])/2):null;};
+
+// Split a stock-day's evidence into what was published at or before the crossing
+// bar's close and what was disclosed afterwards. Times are Asia/Shanghai ISO strings
+// of equal format, so lexical comparison is chronological.
+export function eventEvidence(pack,symbol,date,seconds){
+  const day=pack?.days?.[String(symbol)]?.[String(date)];
+  const cutoff=isoAt(date,seconds);
+  const empty={announcements:[],news_company:[],news_industry:[],macro:[]};
+  if(!day)return {available:false,cutoff,reasons:[],attribution:null,known:empty,later:{...empty},flow:null,daily_return:null,market_return:null,name:pack?.symbols?.[symbol]?.name??null,industry:pack?.symbols?.[symbol]?.industry??null};
+  const split=items=>{const known=[],later=[];for(const item of items||[])(String(item.time)<=cutoff?known:later).push(item);return [known,later];};
+  const [annoKnown,annoLater]=split(day.announcements),[companyKnown,companyLater]=split(day.news_company),[industryKnown,industryLater]=split(day.news_industry),[macroKnown,macroLater]=split(pack.macro_by_date?.[String(date)]);
+  const attribution=day.attribution||null;
+  const reasons=attribution?attribution.causes.map(c=>({id:c.f,title:c.label,probability:Math.round(c.p*1000)/10,likelihood_ratio:c.lr??null,event_rate:c.er??null,support:c.n??null,signals:c.signals||[],flow:c.f==='flow'})):[];
+  return {available:true,cutoff,reasons,attribution,known:{announcements:annoKnown,news_company:companyKnown,news_industry:industryKnown,macro:macroKnown},later:{announcements:annoLater,news_company:companyLater,news_industry:industryLater,macro:macroLater},flow:day.flow||null,daily_return:day.daily_return??null,market_return:day.market_return??null,down5_breadth:day.down5_breadth??null,screened:day.screened??null,name:pack.symbols?.[symbol]?.name??null,industry:pack.symbols?.[symbol]?.industry??null};
 }
-export function simulatedReasons(symbol,date,seconds,basis){
-  // Stable choice of a hand-written scenario is for repeatable UI demonstrations only.
-  let h=0;for(const ch of `${symbol}|${date}|${seconds}|${basis}`)h=(Math.imul(h,31)+ch.charCodeAt(0))>>>0;
-  const profile=PROFILES[h%PROFILES.length];
-  // Stable per-event mixing keeps replay, popup, history and export consistent.
-  let seed=Math.imul(h^(h>>>16),0x45d9f3b)>>>0;
-  seed=(seed^(seed>>>16))>>>0;
-  const weights=WEIGHT_OPTIONS[seed%WEIGHT_OPTIONS.length];
-  return profile.map((i,k)=>({...REASONS[i],probability:weights[k],simulated:true,probability_label:'Demo probability'}));
+
+// Trading-activity facts from the five-minute bars completed by the crossing bar.
+export function barFlow(bars,seconds){
+  const done=bars.filter(b=>closeSeconds(b)<=seconds);
+  const index=done.findIndex(b=>closeSeconds(b)===seconds);
+  if(index<0)return null;
+  const bar=done[index],prior=done.slice(0,index);
+  const priorVolume=prior.map(b=>b.volume).filter(v=>Number.isFinite(v)&&v>0);
+  const center=priorVolume.length>=3?median(priorVolume):null;
+  const peak=prior.reduce((m,b)=>finitePositive(b.close)?Math.max(m??b.close,b.close):m,null);
+  let streak=0;for(let i=index;i>=0&&finitePositive(done[i].close)&&finitePositive(done[i].open)&&done[i].close<done[i].open;i--)streak++;
+  const sessionVolume=done.reduce((s,b)=>s+(Number.isFinite(b.volume)?b.volume:0),0);
+  return {bar_volume:bar.volume,prior_median_volume:center,volume_multiple:center?bar.volume/center:null,bar_return:finitePositive(bar.open)?bar.close/bar.open-1:null,drop_from_peak:finitePositive(peak)?bar.close/peak-1:null,down_bar_streak:streak,bars_completed:done.length,session_volume:sessionVolume,bar_share_of_session:sessionVolume>0?bar.volume/sessionVolume:null};
 }
+
 export function observe(bars,previousClose,basis){
   if(!['drawdown','day_return'].includes(basis))throw Error('跌幅口径无效');
   let peak=null,under=false,latest={price:null,reference:null,change:null,available:false};const crossings=[];
@@ -48,9 +54,9 @@ export function observe(bars,previousClose,basis){
 }
 
 export class AttributionReplay{
-  constructor(data){
+  constructor(data,evidence=null){
     if(!data||!Array.isArray(data.symbols)||!data.symbols.length||!Array.isArray(data.dates)||!data.dates.length)throw Error('历史数据包无效');
-    this.data=data;this.sequence=0;this.counter=0;this.catalog=new Map();this.emitted=new Set();
+    this.data=data;this.evidence=evidence;this.sequence=0;this.counter=0;this.catalog=new Map();this.emitted=new Set();
     this.state={date:data.dates.includes(20260727)?20260727:data.dates[0],cursor:48900,running:false,speed:60,basis:'drawdown',events:[],currentEvents:[],latest:{},runId:1};
     this.anchor=performance.now();this.refreshLatest();
   }
@@ -68,6 +74,10 @@ export class AttributionReplay{
     }
     return this.catalog.get(key);
   }
+  describe(e){
+    const evidence=eventEvidence(this.evidence,e.symbol,e.date,e.seconds);
+    return {...e,time:timeText(e.seconds),name:evidence.name,industry:evidence.industry,reasons:evidence.reasons,evidence,intraday:barFlow(this.bars(e.symbol,e.date),e.seconds),simulated:false,price_source:'historical',explanation_source:evidence.available?'end_of_day_attribution':'evidence_unavailable',disclaimer:DISCLAIMER};
+  }
   move(target){
     if(!Number.isFinite(target)||target<this.state.cursor||target>54000)throw Error('回放时间无效');
     const fresh=[];
@@ -75,7 +85,7 @@ export class AttributionReplay{
       const key=`${e.date}|${e.symbol}|${e.seconds}|${e.basis}`;
       if(e.seconds<=this.state.cursor||e.seconds>target||this.emitted.has(key))continue;
       this.emitted.add(key);
-      const event={...e,id:++this.sequence,runId:this.state.runId,time:timeText(e.seconds),reasons:simulatedReasons(e.symbol,e.date,e.seconds,e.basis),simulated:true,price_source:'historical',explanation_source:'handwritten_demo',disclaimer:DISCLAIMER};
+      const event={...this.describe(e),id:++this.sequence,runId:this.state.runId};
       this.state.events.push(event);this.state.currentEvents.push(event);fresh.push(event);
     }
     this.state.cursor=target;if(target===54000)this.state.running=false;this.refreshLatest();return fresh;

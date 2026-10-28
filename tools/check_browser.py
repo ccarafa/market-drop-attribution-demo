@@ -64,22 +64,25 @@ def exercise():
     assert js("document.querySelectorAll('#date-select option').length")==23
     assert js("document.querySelectorAll('#stock-tape [data-symbol]').length")==8
     assert js('document.title')=='市场事件归因系统'
-    assert js("document.querySelector('.truth-banner p').textContent.trim()")=='Demo'
-    assert js("document.querySelector('#popup-disclaimer').textContent.trim()")=='Demo'
+    assert '真实证据回放' in js("document.querySelector('.truth-banner p').textContent")
+    assert '日终归因' in js("document.querySelector('#popup-disclaimer').textContent")
     screenshot('initial')
     click('#step');wait("document.getElementById('event-dialog').open")
     first=state()['currentEvents'][0]
     assert first['symbol']=='000011' and first['seconds']==49200
     assert abs(first['change']-(-.066006600660066))<1e-10
-    assert js("document.querySelectorAll('#popup-reasons .reason-item').length")==3
+    # The starter case closes within 2% on the day, so it carries evidence but no end-of-day probabilities.
+    assert js("document.querySelectorAll('#popup-reasons .reason-item, #popup-reasons .reason-empty').length")>=1
     probs=js("[...document.querySelectorAll('#popup-reasons .reason-probability strong')].map(x=>parseFloat(x.textContent))")
-    assert probs==sorted(probs,reverse=True) and sum(probs)==100
-    assert all(p%10!=0 for p in probs)
-    assert all(x=="Demo" for x in js("[...document.querySelectorAll('#popup-reasons .reason-description')].map(x=>x.textContent.trim())"))
+    assert probs==sorted(probs,reverse=True) and sum(probs)<=100.05
+    assert js("document.querySelectorAll('#popup-evidence .evidence-group').length")==3
+    assert js("document.querySelectorAll('#popup-evidence .evidence-items li').length")>=1
+    assert '事件前已知' in js("document.getElementById('popup-evidence').textContent") and '事后披露' in js("document.getElementById('popup-evidence').textContent")
+    assert all(x for x in js("[...document.querySelectorAll('#popup-reasons .reason-description')].map(x=>x.textContent.trim())"))
     assert not any(x in js("document.getElementById('event-dialog').textContent") for x in ["模拟情景","模拟情形","预设情景","模拟概率"])
-    assert all('Demo' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
+    assert all('日终归因' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
     assert all('概率' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
-    assert js("document.getElementById('popup-disclaimer').textContent.trim()")=='Demo'
+    assert '不是因果证明' in js("document.getElementById('popup-disclaimer').textContent")
     screenshot('popup')
     click('#review-event');wait("!document.getElementById('event-dialog').open")
     assert js('window.attributionDemo.selectedSymbol')=='000011'
@@ -104,7 +107,7 @@ def exercise():
     assert len(state()['currentEvents'])==len(simultaneous['symbols'])
     shown=[]
     for _ in simultaneous['symbols']:
-        assert js("document.querySelectorAll('#popup-reasons .reason-item').length")==3
+        assert js("document.querySelectorAll('#popup-evidence .evidence-group').length")==3
         shown.append(js("document.getElementById('popup-title').textContent.split(' ')[0]"));click('#review-event')
     assert sorted(shown)==sorted(simultaneous['symbols'])
     assert not js("document.getElementById('event-dialog').open")
@@ -118,8 +121,10 @@ def exercise():
     # Verify export payload without writing into a browser's default download directory.
     js("window._originalBlobURL=URL.createObjectURL;URL.createObjectURL=b=>{window._exportPayload=b.text();return window._originalBlobURL(b);};window._anchorClick=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){if(!this.download)return window._anchorClick.call(this);};")
     click('#export');payload=json.loads(js('window._exportPayload',True))
-    assert payload['all_reasons_and_probabilities_are_fictional'] is True
-    assert payload['events'] and all(e['simulated'] and len(e['reasons'])==3 for e in payload['events'])
+    assert payload['simulated'] is False and payload['probabilities']=='end_of_day_in_sample_association'
+    assert payload['events'] and all(not e['simulated'] and e['evidence']['available'] and e['intraday']['bars_completed']>0 for e in payload['events'])
+    assert any(item.get('url') for e in payload['events'] for group in ('news_company','news_industry','macro') for item in e['evidence']['known'][group]+e['evidence']['later'][group])
+    assert all(all(str(i['time'])<=e['evidence']['cutoff'] for g in e['evidence']['known'].values() for i in g) for e in payload['events'])
     screenshot('history')
     # Opening an older event and returning to its workspace must show that event's date and basis.
     js("document.querySelector('#history-list [data-event-id=\"1\"]').click()")
@@ -137,9 +142,9 @@ def exercise():
     click('.nav-button[data-page=monitor]');screenshot('mobile')
     click('#next-event');wait("document.getElementById('event-dialog').open")
     assert js("document.getElementById('event-dialog').getBoundingClientRect().width<=window.innerWidth")
-    assert js("document.querySelectorAll('#popup-reasons .reason-item').length")==3
+    assert js("document.querySelectorAll('#popup-evidence .evidence-group').length")==3
     screenshot('mobile-popup')
-    return {'pages':3,'stocks':8,'dates':23,'real_historical_threshold_trigger':'passed','three_ranked_fictional_reasons':'passed','all_stock_monitoring':'passed','simultaneous_event_queue':'passed','silent_seek':'passed','historical_event_chart_alignment':'passed','no_future_candles':'passed','network_blocked_replay':'passed','export_markers':'passed','mobile_width':390}
+    return {'pages':3,'stocks':8,'dates':23,'real_historical_threshold_trigger':'passed','real_evidence_with_timestamps_and_links':'passed','all_stock_monitoring':'passed','simultaneous_event_queue':'passed','silent_seek':'passed','historical_event_chart_alignment':'passed','no_future_candles':'passed','network_blocked_replay':'passed','export_markers':'passed','mobile_width':390}
 
 try:
     end=time.time()+20

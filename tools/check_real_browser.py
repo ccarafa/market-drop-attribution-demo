@@ -287,7 +287,7 @@ def exercise():
     assert demo and urlsplit(demo).netloc == site_origin
     cdp('Page.navigate', {'url': demo})
     wait('window.attributionDemo?.engine?.data?.symbols?.length===8')
-    assert js("document.querySelector('.truth-banner p').textContent.trim()") == 'Demo'
+    assert '真实证据回放' in js("document.querySelector('.truth-banner p').textContent")
     assert js("document.querySelector('#return-study')!==null")
     click('#return-study')
     # The demo returns to the site homepage, which is now the attribution workbench.
