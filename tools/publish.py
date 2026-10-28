@@ -134,7 +134,7 @@ def main() -> None:
     git('config', 'user.email', 'project@localhost')
     git('add', '--', *files)
     if git('diff', '--cached', '--quiet', check=False).returncode:
-        git('commit', '-m', 'Show real time-stamped evidence with source links for every replay event\n\n'
+        git('commit', '-m', 'Add provider money-flow evidence to attribution causes and replay events\n\n'
             'Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>')
     git('-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential', 'push', 'origin', 'HEAD:main')
     commit = git('rev-parse', 'HEAD').stdout.strip()

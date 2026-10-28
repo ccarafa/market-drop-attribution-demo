@@ -67,7 +67,54 @@ FLOW_LABELS = {
     "big_prints": "单笔 20 万元以上成交占成交额四成以上",
     "limit_down_touched": "触及跌停价",
     "limit_up_touched": "触及涨停价",
+    "main_outflow_heavy": "主力（大单与超大单）净流出达到当日成交额一成以上",
+    "main_inflow_heavy": "主力（大单与超大单）净流入达到当日成交额一成以上",
+    "xl_outflow_heavy": "超大单净流出达到当日成交额半成以上",
+    "xl_inflow_heavy": "超大单净流入达到当日成交额半成以上",
+    "retail_absorbing": "散户（小单与中单）净流入同时主力净流出，接盘特征",
 }
+MONEYFLOW_FIELDS = ("turnoverValue", "turnoverVol", "dealAmount", "netFlow", "inflow", "outflow", "mainFlow", "smainFlow",
+                    "netFlowS", "netFlowM", "netFlowL", "netFlowXL", "mainInflow", "mainOutflow")
+
+
+def load_moneyflow(directory):
+    """(symbol, date) -> provider daily money-flow record (main/large/extra-large order splits)."""
+    out = {}
+    if not directory:
+        return out
+    for path in sorted(Path(directory).glob("*.json")):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not payload.get("complete"):
+            continue
+        for row in payload.get("rows", []):
+            code = str(row.get("ticker") or "").zfill(6)
+            day = str(row.get("tradeDate") or "").replace("-", "")
+            if len(code) == 6 and code.isdigit() and day.isdigit():
+                out[(code, int(day))] = {k: row.get(k) for k in MONEYFLOW_FIELDS}
+    return out
+
+
+def moneyflow_features(mf):
+    feats = set()
+    if not mf:
+        return feats
+    turnover = mf.get("turnoverValue")
+    if not isinstance(turnover, (int, float)) or turnover <= 0:
+        return feats
+    main = mf.get("mainFlow") or 0.0
+    xl = mf.get("netFlowXL") or 0.0
+    small = mf.get("smainFlow") or 0.0
+    if main / turnover <= -0.10:
+        feats.add("main_outflow_heavy")
+    if main / turnover >= 0.10:
+        feats.add("main_inflow_heavy")
+    if xl / turnover <= -0.05:
+        feats.add("xl_outflow_heavy")
+    if xl / turnover >= 0.05:
+        feats.add("xl_inflow_heavy")
+    if main < 0 and small > 0 and small / turnover >= 0.05:
+        feats.add("retail_absorbing")
+    return feats
 INFORMATIVE = {k for k, v in FAMILIES.items() if v[2]}
 NEWS_LABELS = {
     "news_company": "直接提及本股的财经文章",
@@ -349,9 +396,9 @@ def feature_consistent(feature, direction):
     if kind in ("anno", "peer_announcements", "news_industry_regulator"):
         tag = parts[1] if kind == "anno" else parts[0]
         return tag == "neu" or (tag == "neg") == (direction < 0)
-    if feature in ("net_sell_pressure", "limit_down_touched"):
+    if feature in ("net_sell_pressure", "limit_down_touched", "main_outflow_heavy", "xl_outflow_heavy", "retail_absorbing"):
         return direction < 0
-    if feature in ("net_buy_pressure", "limit_up_touched"):
+    if feature in ("net_buy_pressure", "limit_up_touched", "main_inflow_heavy", "xl_inflow_heavy"):
         return direction > 0
     return kind != "explain"
 
@@ -451,11 +498,12 @@ def compact(number, digits=6):
     return None if number is None or not math.isfinite(number) else round(number, digits)
 
 
-def build(daily, evidence_dir, intraday_path, out_dir):
+def build(daily, evidence_dir, intraday_path, out_dir, moneyflow_dir=None):
     import pyarrow.parquet as pq
     records = pq.read_table(daily, columns=study.SOURCE_COLUMNS).to_pylist()
     rows, strict_events, market, summary = study.compute_study(records)
     evidence = build_evidence(evidence_dir)
+    moneyflow = load_moneyflow(moneyflow_dir)
     stock_industry = evidence["stock_industry"]
     calendar = Calendar(sorted({r["date"] for r in rows}))
     by_date = defaultdict(list)
@@ -475,6 +523,8 @@ def build(daily, evidence_dir, intraday_path, out_dir):
         windows = windows_cache.setdefault(row["date"], calendar.windows(row["date"]))
         feats, items = stock_day_features(row, windows, evidence, stock_industry.get(row["symbol"]), peers, industry_size)
         feats |= flow_features(row, intraday.get((row["symbol"], row["date"])))
+        row["_mf"] = moneyflow.get((row["symbol"], row["date"]))
+        feats |= moneyflow_features(row["_mf"])
         row["_features"], row["_items"] = feats, items
         if row["screened"] and row["return"] is not None:
             population.append(row)
@@ -511,6 +561,10 @@ def build(daily, evidence_dir, intraday_path, out_dir):
             }
             if row["flags"]:
                 event["flags"] = row["flags"]
+            if row.get("_mf"):
+                mf = row["_mf"]
+                event["mf"] = {k: (compact(float(v), 2) if isinstance(v, (int, float)) else None) for k, v in mf.items()
+                               if k in ("turnoverValue", "dealAmount", "netFlow", "mainFlow", "smainFlow", "netFlowS", "netFlowM", "netFlowL", "netFlowXL")}
             if flow:
                 event["flow"] = {k: (compact(v, 4) if isinstance(v, float) else v) for k, v in flow.items()
                                  if k in ("gap_return", "min_bar_return", "min_bar_at", "max_bar_return", "max_bar_at", "max_drawdown",
@@ -564,7 +618,8 @@ def build(daily, evidence_dir, intraday_path, out_dir):
             "timezone": "Asia/Shanghai", "thresholds": list(THRESHOLDS), "boundary_tolerance": TOLERANCE,
             "source_daily_sha256": sha(daily), "builder_sha256": sha(__file__),
             "taxonomy_sha256": sha(Path(__file__).with_name("attribution_taxonomy.py")),
-            "evidence_counts": evidence["counts"], "intraday_rows": len(intraday),
+            "evidence_counts": evidence["counts"], "intraday_rows": len(intraday), "moneyflow_rows": len(moneyflow),
+            "moneyflow": "Provider daily money-flow splits (small/medium/large/extra-large orders by trade value); main = large + extra-large. Thresholds: main net flow at or beyond 10% of turnover, extra-large at or beyond 5%, retail absorbing = main net outflow with small-plus-medium net inflow of at least 5%. Shares are of the day's turnover value; they describe observed order sizes, not identified participants.",
             "calendar": {"days": calendar.days, "assumption": "Sample dates plus weekdays 2026-06-22..30 and 2026-08-03 treated as trading days for window construction."},
             "windows": WINDOW_LABELS, "min_industry_peers": MIN_INDUSTRY_PEERS, "smoothing": SMOOTHING, "flow_floor": FLOW_FLOOR,
             "decomposition": "return = same-date screened sample median (market) + same-industry leave-one-out median minus market (industry) + stock-specific remainder; shares are clipped same-sign fractions.",
@@ -574,7 +629,8 @@ def build(daily, evidence_dir, intraday_path, out_dir):
                            "peers": "industry peers used", "breadth": "share of other screened stocks down more than 5%", "vr": "volume ratio",
                            "sr": "spread ratio", "ic": "imbalance change", "shares": "[market, industry, stock-specific]",
                            "causes": "list of {f: feature, p: probability, w: weight, lr, er: event rate given feature, n: events with feature}",
-                           "ev": "evidence items: announcements inline; news_company and news_industry reference ids in the shard's news dictionary", "flow": "intraday order-flow summary when available"},
+                           "ev": "evidence items: announcements inline; news_company and news_industry reference ids in the shard's news dictionary", "flow": "intraday order-flow summary when available",
+                           "mf": "provider daily money flow in yuan/shares: netFlow, mainFlow (large+extra-large), smainFlow (small+medium), netFlowS/M/L/XL, inflow/outflow, mainInflow/mainOutflow, turnoverValue, turnoverVol, dealAmount"},
             "shard_files": "events/{date}-{level}.json holds the events whose strongest threshold level is 2, 3 or 5 percent; a view at 3 percent needs the 3 and 5 files, a view at 2 percent needs all three.",
             "limitations": [
                 "概率是 2026 年 7 月样本内的经验关联，不是因果证明，也未在样本外验证。",
@@ -621,12 +677,13 @@ def main():
     parser.add_argument("--daily", type=Path, required=True)
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--intraday", type=Path)
+    parser.add_argument("--moneyflow", type=Path, help="Directory of daily provider money-flow JSON files; not published")
     parser.add_argument("--out", type=Path, default=ROOT / "data" / "attribution")
     args = parser.parse_args()
     out = args.out.resolve()
     if ROOT not in out.parents and out != ROOT:
         parser.error("Output directory must be inside the site checkout")
-    summary = build(args.daily, args.evidence, args.intraday, out)
+    summary = build(args.daily, args.evidence, args.intraday, out, args.moneyflow)
     print(json.dumps(summary, ensure_ascii=False))
 
 

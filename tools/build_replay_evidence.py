@@ -39,13 +39,14 @@ def load_attribution_events(symbols):
     return index, wanted
 
 
-def build(daily, evidence_dir):
+def build(daily, evidence_dir, moneyflow_dir=None):
     import pyarrow.parquet as pq
     replay = json.loads((ROOT / "data/replay.json").read_text(encoding="utf-8"))
     symbols = list(replay["symbols"])
     dates = [int(d) for d in replay["dates"]]
     index, events = load_attribution_events(set(symbols))
     evidence = attribution.build_evidence(evidence_dir)
+    moneyflow = attribution.load_moneyflow(moneyflow_dir)
     stock_industry = evidence["stock_industry"]
     records = pq.read_table(daily, columns=study.SOURCE_COLUMNS).to_pylist()
     rows, _, market, _ = study.compute_study(records)
@@ -100,6 +101,8 @@ def build(daily, evidence_dir):
                 "screened": bool(row["screened"]) if row else None,
                 "flow": {"volume_ratio": attribution.compact(row.get("volume_ratio"), 3), "spread_ratio": attribution.compact(row.get("spread_ratio"), 3),
                          "imbalance_change": attribution.compact(row.get("imbalance_change"), 4)} if row else None,
+                "moneyflow": ({k: (attribution.compact(float(v), 2) if isinstance(v, (int, float)) else None) for k, v in moneyflow[(symbol, date)].items()}
+                              if (symbol, date) in moneyflow else None),
                 "attribution": attr, "announcements": annos[:16], "news_company": news_company[:10], "news_industry": news_industry[:10],
             }
     pack = {
@@ -109,6 +112,7 @@ def build(daily, evidence_dir):
             "timezone": "Asia/Shanghai", "attribution_builder_sha256": index["metadata"]["builder_sha256"],
             "evidence_counts": index["metadata"]["evidence_counts"], "windows": attribution.WINDOW_LABELS,
             "min_lr": index["metadata"].get("min_lr"), "thresholds": index["metadata"]["thresholds"],
+            "moneyflow_rows": len(moneyflow), "moneyflow": index["metadata"].get("moneyflow"),
             "as_of_rule": "Each item carries its publication time; the replay marks items published at or before the crossing bar's close as known at that moment and later items as disclosed afterwards. The end-of-day attribution uses the full day's windows and is shown as such.",
             "limitations": index["metadata"]["limitations"],
         },
@@ -127,8 +131,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--daily", type=Path, required=True)
     parser.add_argument("--evidence", type=Path, required=True)
+    parser.add_argument("--moneyflow", type=Path)
     args = parser.parse_args()
-    print(json.dumps(build(args.daily, args.evidence), ensure_ascii=False))
+    print(json.dumps(build(args.daily, args.evidence, args.moneyflow), ensure_ascii=False))
 
 
 if __name__ == "__main__":

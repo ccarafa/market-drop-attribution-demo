@@ -106,6 +106,16 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(ba.threshold_level(0.021), 0.02)
         self.assertEqual(ba.threshold_level(-0.03 - 1e-9), 0.03)
 
+    def test_moneyflow_features_use_turnover_shares(self):
+        mf = {"turnoverValue": 1e8, "mainFlow": -1.5e7, "netFlowXL": -6e6, "smainFlow": 1.5e7}
+        self.assertEqual(ba.moneyflow_features(mf), {"main_outflow_heavy", "xl_outflow_heavy", "retail_absorbing"})
+        self.assertEqual(ba.moneyflow_features({"turnoverValue": 1e8, "mainFlow": 2e7, "netFlowXL": 1e6, "smainFlow": -2e7}), {"main_inflow_heavy"})
+        self.assertEqual(ba.moneyflow_features({"turnoverValue": 0, "mainFlow": -1}), set())
+        self.assertEqual(ba.moneyflow_features(None), set())
+        self.assertTrue(ba.feature_consistent("main_outflow_heavy", -1))
+        self.assertFalse(ba.feature_consistent("main_outflow_heavy", +1))
+        self.assertTrue(ba.feature_consistent("main_inflow_heavy", +1))
+
     def test_feature_consistency(self):
         self.assertTrue(ba.feature_consistent("anno:share_reduction:neg:pre_open", -1))
         self.assertFalse(ba.feature_consistent("anno:share_reduction:neg:pre_open", +1))

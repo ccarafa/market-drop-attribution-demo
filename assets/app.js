@@ -46,7 +46,9 @@ function flowHTML(event){
   const i=event.intraday||{},d=event.evidence?.flow||{},rows=[];
   if(event.intraday){rows.push(['触发 K 线成交量 / 当日此前 K 线中位数',ratio(i.volume_multiple)],['触发 K 线涨跌幅',pct(i.bar_return)],['较当日收盘峰值回撤',pct(i.drop_from_peak)],['连续下跌 K 线数',whole(i.down_bar_streak)],['触发 K 线占当日累计成交量',Number.isFinite(i.bar_share_of_session)?`${(i.bar_share_of_session*100).toFixed(1)}%`:'—']);}
   if(event.evidence?.flow){rows.push(['当日成交量 / 前 5 日中位数（日终）',ratio(d.volume_ratio)],['当日平均价差 / 前 5 日中位数（日终）',ratio(d.spread_ratio)],['盘口绝对失衡变化（日终）',Number.isFinite(d.imbalance_change)?`${d.imbalance_change>0?'+':''}${(d.imbalance_change*100).toFixed(2)} 百分点`:'—']);}
-  return rows.length?`<dl class="flow-facts">${rows.map(([k,v])=>`<dt>${escapeText(k)}</dt><dd>${v}</dd>`).join('')}</dl>`:'<p class="evidence-none">无</p>';
+  const mf=event.evidence?.moneyflow;
+  if(mf){const money=v=>Number.isFinite(v)?`${Math.abs(v)>=1e8?(v/1e8).toFixed(2)+' 亿':(v/1e4).toFixed(0)+' 万'} 元${Number.isFinite(mf.turnoverValue)&&mf.turnoverValue>0?`（占成交额 ${(v/mf.turnoverValue*100).toFixed(1)}%）`:''}`:'—';rows.push(['主力（大单+超大单）净流入（日终）',money(mf.mainFlow)],['超大单净流入（日终）',money(mf.netFlowXL)],['大单净流入（日终）',money(mf.netFlowL)],['中小单净流入（日终）',money(mf.smainFlow)],['当日成交额',Number.isFinite(mf.turnoverValue)?`${(mf.turnoverValue/1e8).toFixed(2)} 亿元`:'—']);}
+  return rows.length?`<dl class="flow-facts">${rows.map(([k,v])=>`<dt>${escapeText(k)}</dt><dd>${v}</dd>`).join('')}</dl>${mf?'<p class="evidence-none">资金流向按单笔成交金额分为小、中、大、超大单，主力 = 大单 + 超大单；描述成交单大小，不识别交易者身份。</p>':''}`:'<p class="evidence-none">无</p>';
 }
 function evidenceHTML(event,compact=false){
   const ev=event.evidence||{};

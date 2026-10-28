@@ -7,6 +7,7 @@ const number=(value,digits=2)=>finite(value)?value.toLocaleString('zh-CN',{minim
 const percent=(value,digits=2)=>finite(value)?`${value>0?'+':''}${number(value*100,digits)}%`:'—';
 const share=value=>finite(value)?`${number(value*100,0)}%`:'—';
 const magnitude=value=>finite(value)?`${number(Math.abs(value)*100,2)}%`:'—';
+const whole=value=>finite(value)?Math.round(value).toLocaleString('zh-CN'):'—';
 const ratio=value=>finite(value)?`${number(value,2)}×`:'—';
 const compact=value=>!finite(value)?'—':Math.abs(value)>=1e8?`${number(value/1e8,2)} 亿`:Math.abs(value)>=1e4?`${number(value/1e4,2)} 万`:number(value,0);
 const timeText=value=>value?String(value).slice(5,16).replace('T',' '):'—';
@@ -109,6 +110,8 @@ function renderEvidence(){
   const e=selected,ev=e.ev||{},flow=e.flow||{};
   const macro=(shard?.macro_news||[]).slice(0,8);
   const flowRows=[['成交量 / 前 5 日中位数',ratio(e.vr)],['平均价差 / 前 5 日中位数',ratio(e.sr)],['盘口绝对失衡变化',finite(e.ic)?`${e.ic>0?'+':''}${number(e.ic*100,2)} 百分点`:'历史不足']];
+  const mf=e.mf||{},mfShare=value=>finite(value)&&finite(mf.turnoverValue)&&mf.turnoverValue>0?`${compact(value)} 元（占成交额 ${(value/mf.turnoverValue*100).toFixed(1)}%）`:compact(value)+(finite(value)?' 元':'');
+  if(e.mf){flowRows.push(['主力（大单+超大单）净流入',mfShare(mf.mainFlow)],['超大单净流入',mfShare(mf.netFlowXL)],['大单净流入',mfShare(mf.netFlowL)],['中小单净流入',mfShare(mf.smainFlow)],['全部净流入',mfShare(mf.netFlow)],['当日成交额',finite(mf.turnoverValue)?`${compact(mf.turnoverValue)} 元`:'—'],['成交笔数',whole(mf.dealAmount)]);}
   if(Object.keys(flow).length){flowRows.push(['开盘跳空',percent(flow.gap_return)],['最大 5 分钟跌幅',`${percent(flow.min_bar_return)}（${barTime(flow.min_bar_at)}）`],['最大 5 分钟涨幅',`${percent(flow.max_bar_return)}（${barTime(flow.max_bar_at)}）`],['日内最大回撤',`${percent(flow.max_drawdown)}（${barTime(flow.max_drawdown_at)}）`],['主动买入减卖出占比',finite(flow.net_buy_share)?`${flow.net_buy_share>0?'+':''}${number(flow.net_buy_share*100,1)} 百分点`:'—'],['大额成交占成交额',share(flow.big_print_share)],['笔均成交额',compact(flow.avg_trade_value)],['触及跌停快照数',number(flow.at_low_limit_snaps,0)],['跌停封单最大量',compact(flow.low_limit_queue_max)],['触及涨停快照数',number(flow.at_high_limit_snaps,0)]);}
   const contrary=(e.contrary||[]).map(f=>`<li>${escapeText(featureLabel(f))}</li>`).join('');
   const weak=(e.weak||[]).map(f=>`<li>${escapeText(featureLabel(f))}</li>`).join('');
@@ -117,7 +120,7 @@ function renderEvidence(){
   <div class="evidence-block"><h4>直接提及本股的财经文章<small>公众号来源，仅标题与链接</small></h4>${itemRows(resolveNews(ev.news_company),'news')}</div>
   <div class="evidence-block"><h4>本行业报道<small>${escapeText(e.industry||'无行业标签')}</small></h4>${itemRows(resolveNews(ev.news_industry),'news')}</div>
   <div class="evidence-block"><h4>当日宏观、政策与市场背景<small>同日全市场共享</small></h4>${macro.length?`<ul class="item-list">${macro.map(item=>`<li><span class="item-time">${timeText(item.time)}</span><span class="item-title"><a href="${escapeText(item.url)}" target="_blank" rel="noopener noreferrer">${escapeText(item.title)}</a></span><span class="item-tags">${item.source?`<span class="tag">${escapeText(item.source)}</span>`:''}${item.regulator?'<span class="tag">监管或政策</span>':''}${item.macro?'<span class="tag">宏观或全球</span>':''}</span></li>`).join('')}</ul>`:'<p class="empty-note">该日没有归入背景的文章。</p>'}</div>
-  <div class="evidence-block"><h4>成交与盘口<small>日汇总与快照代理指标</small></h4><dl class="flow-grid">${flowRows.map(([k,v])=>`<dt>${escapeText(k)}</dt><dd>${v}</dd>`).join('')}</dl></div>
+  <div class="evidence-block"><h4>成交、资金流向与盘口<small>日汇总、供应商资金流向拆分与快照代理指标</small></h4><dl class="flow-grid">${flowRows.map(([k,v])=>`<dt>${escapeText(k)}</dt><dd>${v}</dd>`).join('')}</dl>${e.mf?'<p class="empty-note">资金流向按单笔成交金额分为小单、中单、大单、超大单；主力 = 大单 + 超大单。它描述成交单的大小，不识别交易者身份。</p>':''}</div>
   <div class="evidence-block"><h4>未计入原因的证据<small>反向、关联较弱或事后披露</small></h4>${contrary?`<p class="empty-note">与本次方向相反的信息：</p><ul class="limitation-list">${contrary}</ul>`:''}${weak?`<p class="empty-note">出现但样本关联较弱（似然比低于 ${number(index.metadata?.min_lr??1.5,1)}）：</p><ul class="limitation-list">${weak}</ul>`:''}${explain?`<p class="empty-note">当日收盘后的事后披露：</p><ul class="limitation-list">${explain}</ul>`:''}${!contrary&&!weak&&!explain?'<p class="empty-note">没有反向、弱关联或事后披露记录。</p>':''}</div>`;
   $('attr-availability').textContent=`日度证据可用时间：${dateTime(shard?.available_at)}。事件标识 ${e.id}。公告与文章时间为来源发布时间（上海时间）。`;
 }

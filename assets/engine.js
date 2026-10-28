@@ -21,7 +21,7 @@ export function eventEvidence(pack,symbol,date,seconds){
   const [annoKnown,annoLater]=split(day.announcements),[companyKnown,companyLater]=split(day.news_company),[industryKnown,industryLater]=split(day.news_industry),[macroKnown,macroLater]=split(pack.macro_by_date?.[String(date)]);
   const attribution=day.attribution||null;
   const reasons=attribution?attribution.causes.map(c=>({id:c.f,title:c.label,probability:Math.round(c.p*1000)/10,likelihood_ratio:c.lr??null,event_rate:c.er??null,support:c.n??null,signals:c.signals||[],flow:c.f==='flow'})):[];
-  return {available:true,cutoff,reasons,attribution,known:{announcements:annoKnown,news_company:companyKnown,news_industry:industryKnown,macro:macroKnown},later:{announcements:annoLater,news_company:companyLater,news_industry:industryLater,macro:macroLater},flow:day.flow||null,daily_return:day.daily_return??null,market_return:day.market_return??null,down5_breadth:day.down5_breadth??null,screened:day.screened??null,name:pack.symbols?.[symbol]?.name??null,industry:pack.symbols?.[symbol]?.industry??null};
+  return {available:true,cutoff,reasons,attribution,known:{announcements:annoKnown,news_company:companyKnown,news_industry:industryKnown,macro:macroKnown},later:{announcements:annoLater,news_company:companyLater,news_industry:industryLater,macro:macroLater},flow:day.flow||null,moneyflow:day.moneyflow||null,daily_return:day.daily_return??null,market_return:day.market_return??null,down5_breadth:day.down5_breadth??null,screened:day.screened??null,name:pack.symbols?.[symbol]?.name??null,industry:pack.symbols?.[symbol]?.industry??null};
 }
 
 // Trading-activity facts from the five-minute bars completed by the crossing bar.
