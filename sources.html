@@ -29,7 +29,7 @@
           <h3>更换 Token</h3><ol id="rotation-steps" class="rotation-steps"></ol>
           <div class="rotation-actions"><a id="link-secrets" class="button primary-button" href="#" target="_blank" rel="noopener noreferrer">在 GitHub 更换 Token ↗</a><a id="link-workflow" class="button" href="#" target="_blank" rel="noopener noreferrer">运行连接检查 ↗</a><a id="link-runs" class="text-link" href="#" target="_blank" rel="noopener noreferrer">查看检查记录</a></div>
           <div class="badge-row"><span>工作流运行状态与脱敏结果在 GitHub Actions 页面查看；本站不向外部站点发起请求。</span></div>
-          <p class="small-note">需要以仓库所有者身份登录 GitHub；Secret 的值在保存后任何人（包括本站）都无法读出，只能覆盖。</p>
+          <p class="small-note">需要以仓库所有者账号登录 GitHub。GitHub 对未登录或非所有者的访问者把设置页显示为 404：若点击后看到 404，请先<a id="link-login" href="#" target="_blank" rel="noopener noreferrer">登录 GitHub</a>（账号须是 <code id="repo-owner">—</code> 的所有者），再回到本页点击按钮；或直接打开<a id="link-new-secret" href="#" target="_blank" rel="noopener noreferrer">新建 Secret</a>。Secret 的值保存后任何人（包括本站）都无法读出，只能覆盖。</p>
         </aside>
       </div>
     </section>

@@ -78,6 +78,17 @@ def exercise():
     assert js("document.querySelectorAll('#popup-evidence .evidence-group').length")==3
     assert js("document.querySelectorAll('#popup-evidence .evidence-items li').length")>=1
     assert '事件前已知' in js("document.getElementById('popup-evidence').textContent") and '事后披露' in js("document.getElementById('popup-evidence').textContent")
+    # Long evidence lists collapse to three items with an expand/collapse control.
+    assert js("document.querySelectorAll('#popup-evidence .evidence-toggle').length")>=1
+    assert js("[...document.querySelectorAll('#popup-evidence .evidence-items')].every(ul=>[...ul.querySelectorAll('li:not([hidden])')].length<=3)")
+    hidden_before=js("document.querySelectorAll('#popup-evidence li[data-extra][hidden]').length");assert hidden_before>0
+    click('#popup-evidence .evidence-toggle')
+    assert js("document.querySelector('#popup-evidence .evidence-toggle').getAttribute('aria-expanded')")=='true'
+    assert js("document.querySelector('#popup-evidence .evidence-toggle').previousElementSibling.querySelectorAll('li[data-extra][hidden]').length")==0
+    assert '收起' in js("document.querySelector('#popup-evidence .evidence-toggle').textContent")
+    click('#popup-evidence .evidence-toggle')
+    assert js("document.querySelector('#popup-evidence .evidence-toggle').previousElementSibling.querySelectorAll('li[data-extra]:not([hidden])').length")==0
+    assert '展开全部' in js("document.querySelector('#popup-evidence .evidence-toggle').textContent")
     assert all(x for x in js("[...document.querySelectorAll('#popup-reasons .reason-description')].map(x=>x.textContent.trim())"))
     assert not any(x in js("document.getElementById('event-dialog').textContent") for x in ["模拟情景","模拟情形","预设情景","模拟概率"])
     assert all('日终归因' in x for x in js("[...document.querySelectorAll('#popup-reasons .reason-item')].map(x=>x.textContent)"))
@@ -144,7 +155,7 @@ def exercise():
     assert js("document.getElementById('event-dialog').getBoundingClientRect().width<=window.innerWidth")
     assert js("document.querySelectorAll('#popup-evidence .evidence-group').length")==3
     screenshot('mobile-popup')
-    return {'pages':3,'stocks':8,'dates':23,'real_historical_threshold_trigger':'passed','real_evidence_with_timestamps_and_links':'passed','all_stock_monitoring':'passed','simultaneous_event_queue':'passed','silent_seek':'passed','historical_event_chart_alignment':'passed','no_future_candles':'passed','network_blocked_replay':'passed','export_markers':'passed','mobile_width':390}
+    return {'pages':3,'stocks':8,'dates':23,'real_historical_threshold_trigger':'passed','real_evidence_with_timestamps_and_links':'passed','evidence_expand_collapse':'passed','all_stock_monitoring':'passed','simultaneous_event_queue':'passed','silent_seek':'passed','historical_event_chart_alignment':'passed','no_future_candles':'passed','network_blocked_replay':'passed','export_markers':'passed','mobile_width':390}
 
 try:
     end=time.time()+20

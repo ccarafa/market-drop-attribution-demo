@@ -137,7 +137,7 @@ def main() -> None:
     git('config', 'user.email', 'project@localhost')
     git('add', '--', *files)
     if git('diff', '--cached', '--quiet', check=False).returncode:
-        git('commit', '-m', 'Add data-sources page with route inventory and credential rotation entry\n\n'
+        git('commit', '-m', 'Expand and collapse full evidence lists; explain GitHub settings access on sources page\n\n'
             'Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>')
     git('-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential', 'push', 'origin', 'HEAD:main')
     commit = git('rev-parse', 'HEAD').stdout.strip()

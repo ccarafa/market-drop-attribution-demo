@@ -42,3 +42,4 @@
 @media(max-width:1120px){.decomp-table{grid-template-columns:1fr 1fr}}
 @media(max-width:820px){.evidence-columns{grid-template-columns:1fr}.cause-item{grid-template-columns:24px minmax(0,1fr) 70px}.cause-prob strong{font-size:19px}}
 @media(max-width:610px){.decomp-table{grid-template-columns:1fr;gap:10px}.decomp-table dd{font-size:15px}.cause-label{font-size:11px}.flow-grid{grid-template-columns:1fr}}
+.evidence-toggle{display:inline-block;margin-top:4px;font-size:10px}

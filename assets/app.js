@@ -38,10 +38,20 @@ function reasonsHTML(event){
   const head=`<div class="share-line"><span>日终收益 ${pct(ev.attribution.r)}</span><span>市场 ${Math.round(shares[0]*100)}%</span><span>行业 ${Math.round(shares[1]*100)}%</span><span>个股特有 ${Math.round(shares[2]*100)}%</span></div>`;
   return head+event.reasons.map((reason,index)=>`<article class="reason-item ${reason.flow?'flow':''}"><div class="reason-title-line"><h3><span class="reason-rank">${String(index+1).padStart(2,'0')}</span>${escapeText(reason.title)}</h3><div class="reason-probability"><strong>${reason.probability.toFixed(1)}<small>%</small></strong><small>概率</small></div></div><div class="probability-track" aria-hidden="true"><span style="width:${Math.max(0,Math.min(100,reason.probability))}%"></span></div><p class="reason-description">${reasonNote(reason,event)}</p><span class="reason-category">日终归因 · 样本内经验关联</span></article>`).join('');
 }
-function itemList(items,kind,limit){
+const COLLAPSED=3;
+function itemList(items,kind){
   if(!items?.length)return '<p class="evidence-none">无</p>';
-  return `<ul class="evidence-items">${items.slice(0,limit).map(item=>{const link=item.url?` <a href="${escapeText(item.url)}" target="_blank" rel="noopener noreferrer">原文 ↗</a>`:'';const tags=kind==='anno'?`<em>${escapeText(item.label)}</em><em>${escapeText(windowLabel(item.window))}</em>`:`${item.source?`<em>${escapeText(item.source)}</em>`:''}${item.regulator?'<em>监管或政策</em>':''}`;return `<li><time>${stamp(item.time)}</time><span>${escapeText(item.title)}${link}</span><span class="evidence-tags">${tags}</span></li>`;}).join('')}${items.length>limit?`<li class="evidence-more">另有 ${items.length-limit} 条未显示</li>`:''}</ul>`;
+  const rows=items.map((item,index)=>{const link=item.url?` <a href="${escapeText(item.url)}" target="_blank" rel="noopener noreferrer">原文 ↗</a>`:'';const tags=kind==='anno'?`<em>${escapeText(item.label)}</em><em>${escapeText(windowLabel(item.window))}</em>`:`${item.source?`<em>${escapeText(item.source)}</em>`:''}${item.regulator?'<em>监管或政策</em>':''}`;return `<li${index>=COLLAPSED?' data-extra hidden':''}><time>${stamp(item.time)}</time><span>${escapeText(item.title)}${link}</span><span class="evidence-tags">${tags}</span></li>`;}).join('');
+  const toggle=items.length>COLLAPSED?`<button type="button" class="evidence-toggle" data-total="${items.length}" aria-expanded="false">展开全部 ${items.length} 条</button>`:'';
+  return `<ul class="evidence-items">${rows}</ul>${toggle}`;
 }
+function toggleEvidence(button){
+  const expanded=button.getAttribute('aria-expanded')!=='true';
+  button.previousElementSibling.querySelectorAll('li[data-extra]').forEach(li=>{li.hidden=!expanded;});
+  button.setAttribute('aria-expanded',String(expanded));
+  button.textContent=expanded?`收起，只显示前 ${COLLAPSED} 条`:`展开全部 ${button.dataset.total} 条`;
+}
+document.addEventListener('click',event=>{const button=event.target.closest('.evidence-toggle');if(button)toggleEvidence(button);});
 function flowHTML(event){
   const i=event.intraday||{},d=event.evidence?.flow||{},rows=[];
   if(event.intraday){rows.push(['触发 K 线成交量 / 当日此前 K 线中位数',ratio(i.volume_multiple)],['触发 K 线涨跌幅',pct(i.bar_return)],['较当日收盘峰值回撤',pct(i.drop_from_peak)],['连续下跌 K 线数',whole(i.down_bar_streak)],['触发 K 线占当日累计成交量',Number.isFinite(i.bar_share_of_session)?`${(i.bar_share_of_session*100).toFixed(1)}%`:'—']);}
@@ -53,15 +63,15 @@ function flowHTML(event){
 function evidenceHTML(event,compact=false){
   const ev=event.evidence||{};
   if(!ev.available)return '<p class="evidence-none">证据包未载入。</p>';
-  const known=ev.known,later=ev.later,n=compact?4:8;
-  return `<section class="evidence-group"><h4>事件前已知<small>截至 ${escapeText(event.time)}，含此前 5 个交易日</small></h4>
-    <h5>本公司公告 <b>${known.announcements.length}</b></h5>${itemList(known.announcements,'anno',n)}
-    <h5>直接提及本股的财经文章 <b>${known.news_company.length}</b></h5>${itemList(known.news_company,'news',n)}
-    <h5>${escapeText(ev.industry||'行业')}行业报道 <b>${known.news_industry.length}</b></h5>${itemList(known.news_industry,'news',compact?3:5)}
-    <h5>宏观、政策与市场背景 <b>${known.macro.length}</b></h5>${itemList(known.macro,'news',compact?3:5)}</section>
+  const known=ev.known,later=ev.later;
+  return `<section class="evidence-group"><h4>事件前已知<small>截至 ${escapeText(event.time)}，含此前 5 个交易日；每类默认显示前 ${COLLAPSED} 条，可展开全部</small></h4>
+    <h5>本公司公告 <b>${known.announcements.length}</b></h5>${itemList(known.announcements,'anno')}
+    <h5>直接提及本股的财经文章 <b>${known.news_company.length}</b></h5>${itemList(known.news_company,'news')}
+    <h5>${escapeText(ev.industry||'行业')}行业报道 <b>${known.news_industry.length}</b></h5>${itemList(known.news_industry,'news')}
+    <h5>宏观、政策与市场背景 <b>${known.macro.length}</b></h5>${itemList(known.macro,'news')}</section>
   <section class="evidence-group later"><h4>事后披露与后续报道<small>事件时点之后发布，不计入原因</small></h4>
-    <h5>本公司公告 <b>${later.announcements.length}</b></h5>${itemList(later.announcements,'anno',compact?3:6)}
-    <h5>本股与行业报道 <b>${later.news_company.length+later.news_industry.length}</b></h5>${itemList([...later.news_company,...later.news_industry].sort((a,b)=>String(a.time).localeCompare(String(b.time))),'news',compact?3:6)}</section>
+    <h5>本公司公告 <b>${later.announcements.length}</b></h5>${itemList(later.announcements,'anno')}
+    <h5>本股与行业报道 <b>${later.news_company.length+later.news_industry.length}</b></h5>${itemList([...later.news_company,...later.news_industry].sort((a,b)=>String(a.time).localeCompare(String(b.time))),'news')}</section>
   <section class="evidence-group flow"><h4>盘口与成交变化<small>五分钟 K 线与日终汇总的实际数值</small></h4>${flowHTML(event)}</section>`;
 }
 function summaryHTML(event){const ev=event.evidence||{};return `<div class="event-meta-line"><strong>${escapeText(event.symbol)}</strong><span>${pct(event.change)}</span></div><span class="event-timing">${escapeText(ev.name||'')}${ev.industry?` · ${escapeText(ev.industry)}`:''} · ${dateText(event.date)} ${escapeText(event.time??timeText(event.seconds))} · ${basisText(event.basis)}</span><p>触发价 ${price(event.price)}，参考价 ${price(event.reference)}。原因按日终归因概率排序，证据按发布时间标注。</p>`;}

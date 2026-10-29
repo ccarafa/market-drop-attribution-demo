@@ -62,7 +62,7 @@ def build(daily, evidence_dir, moneyflow_dir=None):
             start, end = windows["pre_open"][0], windows["post_close"][1]
             macro_by_date[str(date)] = [{"id": str(n["id"]), "title": n["title"][:70], "source": n["source"], "url": n["url"],
                                          "time": attribution.iso(n["ts"]), "regulator": n["regulator"], "macro": n["macro"]}
-                                        for n in evidence["news_macro"].between("all", start, end)][:20]
+                                        for n in evidence["news_macro"].between("all", start, end)][:40]
         for symbol in symbols:
             industry = stock_industry.get(symbol)
             annos, news_company, news_industry = [], [], []
@@ -77,7 +77,7 @@ def build(daily, evidence_dir, moneyflow_dir=None):
                                              "time": attribution.iso(record["ts"]), "window": window, "direction": record["direction"]})
                     if industry and window != "prior":
                         hits = evidence["news_industry"].between(industry, start, end)
-                        for record in [h for h in hits if h["regulator"]][:6] + [h for h in hits if not h["regulator"]][:4]:
+                        for record in [h for h in hits if h["regulator"]][:12] + [h for h in hits if not h["regulator"]][:8]:
                             news_industry.append({"id": str(record["id"]), "title": record["title"][:70], "source": record["source"], "url": record["url"],
                                                   "time": attribution.iso(record["ts"]), "window": window, "regulator": record["regulator"], "direction": record["direction"]})
             annos.sort(key=lambda a: a["time"])
@@ -103,7 +103,7 @@ def build(daily, evidence_dir, moneyflow_dir=None):
                          "imbalance_change": attribution.compact(row.get("imbalance_change"), 4)} if row else None,
                 "moneyflow": ({k: (attribution.compact(float(v), 2) if isinstance(v, (int, float)) else None) for k, v in moneyflow[(symbol, date)].items()}
                               if (symbol, date) in moneyflow else None),
-                "attribution": attr, "announcements": annos[:16], "news_company": news_company[:10], "news_industry": news_industry[:10],
+                "attribution": attr, "announcements": annos[:30], "news_company": news_company[:20], "news_industry": news_industry[:20],
             }
     pack = {
         "schema_version": 1,

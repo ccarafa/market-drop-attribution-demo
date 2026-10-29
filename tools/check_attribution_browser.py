@@ -141,6 +141,12 @@ def check_selected(direction=None, threshold=None):
     assert js("document.querySelectorAll('#attr-causes .cause-item').length") == len(causes)
     assert js("document.querySelector('#attr-share-bar').children.length") == 3
     assert js("document.querySelector('#attr-evidence').textContent.trim().length>0")
+    if js("document.querySelectorAll('#attr-evidence .evidence-toggle').length")>0:
+        assert js("[...document.querySelectorAll('#attr-evidence .item-list')].every(ul=>[...ul.querySelectorAll('li:not([hidden])')].length<=3)")
+        click('#attr-evidence .evidence-toggle')
+        assert js("document.querySelector('#attr-evidence .evidence-toggle').previousElementSibling.querySelectorAll('li[data-extra][hidden]').length")==0
+        click('#attr-evidence .evidence-toggle')
+        assert js("document.querySelector('#attr-evidence .evidence-toggle').previousElementSibling.querySelectorAll('li[data-extra]:not([hidden])').length")==0
     return event
 
 
