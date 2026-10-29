@@ -1,0 +1,50 @@
+name: Data sources check
+
+on:
+  workflow_dispatch:
+    inputs:
+      trade_date:
+        description: 'One finished trading date to verify (YYYY-MM-DD)'
+        required: true
+        type: string
+      ticker:
+        description: 'One six-digit stock code'
+        required: true
+        default: '000001'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-sources-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: One bounded request per connected route
+        env:
+          DATAYES_API_TOKEN: ${{ secrets.DATAYES_API_TOKEN }}
+          DATAYES_S3_TOKEN: ${{ secrets.DATAYES_S3_TOKEN }}
+          PROBE_DATE: ${{ inputs.trade_date }}
+          PROBE_TICKER: ${{ inputs.ticker }}
+        run: >-
+          python tools/check_data_sources.py
+          --date "$PROBE_DATE" --ticker "$PROBE_TICKER"
+          --output .runtime/data-sources-status.json
+      - name: Save sanitized status only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-sources-status
+          path: .runtime/data-sources-status.json
+          if-no-files-found: ignore
+          retention-days: 30

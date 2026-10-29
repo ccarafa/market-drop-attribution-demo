@@ -26,7 +26,7 @@ TOLERANCE = 1e-12
 
 
 def asset_hashes():
-    files = [ROOT / PAGE, ROOT / 'data/attribution/index.json',
+    files = [ROOT / PAGE, ROOT / 'sources.html', ROOT / 'data/sources.json', ROOT / 'data/attribution/index.json',
              *sorted((ROOT / 'assets').glob('*.js')), *sorted((ROOT / 'assets').glob('*.css')),
              *sorted((ROOT / 'data/attribution/events').glob('*.json'))]
     return {file.relative_to(ROOT).as_posix(): hashlib.sha256(file.read_bytes()).hexdigest() for file in files}
@@ -265,12 +265,34 @@ def exercise():
     assert evidence and urlsplit(evidence).netloc == site_origin
     demo = js("[...document.querySelectorAll('a[href]')].find(el=>el.getAttribute('href').split('?')[0]==='demo.html')?.href")
     assert demo and urlsplit(demo).netloc == site_origin
+
+    # The data-sources page lists every route, links token rotation to GitHub and never shows a secret.
+    sources = js("[...document.querySelectorAll('a[href]')].find(el=>el.getAttribute('href').split('?')[0]==='sources.html')?.href")
+    assert sources and urlsplit(sources).netloc == site_origin
+    cdp('Page.navigate', {'url': sources})
+    wait("window.attributionSources?.data && document.querySelector('#sources-status').hidden")
+    manifest = js('window.attributionSources.data')
+    assert len(manifest['sources']) >= 5 and js("document.querySelectorAll('#sources-list .source-card').length") == len(manifest['sources'])
+    assert js("document.querySelector('#link-secrets').href").startswith('https://github.com/') and 'settings/secrets/actions' in js("document.querySelector('#link-secrets').href")
+    assert 'actions/workflows/' in js("document.querySelector('#link-workflow').href")
+    page_text = js('document.body.innerText')
+    assert '数据接入' in page_text and 'DATAYES_API_TOKEN' in page_text
+    import re as _re
+    assert not _re.search(r'\b[0-9a-f]{32,}\b', page_text), 'secret-like string on sources page'
+    assert js('document.documentElement.scrollWidth<=window.innerWidth+1')
+    screenshot('sources-mobile')
+    cdp('Emulation.setDeviceMetricsOverride', {'width': 1480, 'height': 1060, 'deviceScaleFactor': 1, 'mobile': False})
+    cdp('Page.reload', {'ignoreCache': True})
+    wait("window.attributionSources?.data && document.querySelector('#sources-status').hidden")
+    assert js('document.documentElement.scrollWidth<=window.innerWidth+1')
+    screenshot('sources-desktop')
     return {
         'stock_days': summary['stock_days'], 'events_total': summary['events_total'],
         'strict_down5_events': summary['strict_down5_events'],
         'probability_mass_conserved': 'passed', 'filters_sort_pagination': 'passed',
         'date_shards': 'passed', 'export_matches_selection': 'passed',
         'loading_and_fetch_failure': 'passed', 'mobile_width': 390, 'mobile_layout': 'passed',
+        'sources_page_without_secrets': 'passed',
     }
 
 

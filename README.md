@@ -14,6 +14,10 @@
 
 数据文件：`data/attribution/index.json`（元数据、校准表、股票字典）与 `data/attribution/events/YYYYMMDD.json`（按日期分片的事件、原因与证据）。构建程序为 `tools/build_attribution.py`，输入为本地日汇总与私有证据目录，详见归因方法文档。
 
+## 数据接入与凭证
+
+`sources.html` 列出本站的每条数据路线（公告搜索、公众号文章搜索、个股资金流向、日行情连接检查、S3 文件服务、MCP 网关、本地快照档案）的用途、鉴权方式、计费口径、覆盖范围和最近一次连接检查的脱敏结果，由 `tools/build_sources.py` 生成 `data/sources.json`。凭证只存放在 GitHub 仓库 Secret（`DATAYES_API_TOKEN`、`DATAYES_S3_TOKEN`）和本地构建环境的忽略目录中；页面提供“在 GitHub 更换 Token”和“运行连接检查”入口，工作流 `Data sources check`（`tools/check_data_sources.py`）对每条路线各发一次请求并只保留状态类别。静态页面不保存也不读取密钥。
+
 ## 历史事件证据页
 
 `evidence.html` 保留此前的日度证据工作台：严格下跌超过 5% 的事件、同期样本比较、历史成交量和流动性基准。

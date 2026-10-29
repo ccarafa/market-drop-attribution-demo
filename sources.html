@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#4354b9">
+  <meta name="description" content="本站接入的数据接口、覆盖范围、最近连接检查结果，以及凭证的存放位置与更换方式。">
+  <title>市场事件归因系统 | 数据接入</title>
+  <link rel="stylesheet" href="assets/study.css?v=20261028-1"><link rel="stylesheet" href="assets/attribution.css?v=20261028-1"><link rel="stylesheet" href="assets/sources.css?v=20261029-1"><script type="module" src="assets/sources.js?v=20261029-1"></script>
+</head>
+<body>
+  <a href="#sources-main" class="skip-link">跳到数据接入</a>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="市场事件归因系统首页"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 30 30"><path d="M5 9h6l5 11h9M20 15l5 5-5 5"/></svg></span><span>市场事件<strong>归因系统</strong></span></a>
+    <nav aria-label="主导航"><a href="index.html">事件归因</a><a href="evidence.html">历史事件证据</a><a href="demo.html">盘中回放</a><a href="#sources-main" class="nav-current">数据接入</a></nav>
+    <span class="header-note"><i aria-hidden="true"></i>真实历史数据</span>
+  </header>
+  <main class="page-shell" id="sources-main" tabindex="-1">
+    <div class="page-intro"><div><h1>数据接入</h1><p>本站由哪些接口与档案构建，覆盖到什么范围，凭证放在哪里、怎样更换。</p></div><div class="archive-period"><span>最近生成</span><strong id="sources-generated">—</strong><small>UTC</small></div></div>
+    <div class="scope-note"><span class="note-icon" aria-hidden="true">i</span><p>这是一个静态网站：页面不保存、不读取任何密钥。凭证只存放在 GitHub 仓库 Secret 和本地构建环境中，更换后由 GitHub Actions 的连接检查验证。</p><a href="#credentials">更换凭证</a></div>
+    <div id="sources-status" class="load-status" role="status" aria-live="polite">正在载入数据接入清单…</div>
+    <section class="sources-section" aria-labelledby="connected-heading">
+      <div class="method-title"><div><h2 id="connected-heading">已接入的数据路线</h2><p>每条路线的用途、鉴权方式、计费口径与实际覆盖。</p></div></div>
+      <div id="sources-list" class="source-grid"></div>
+    </section>
+    <section class="sources-section" id="credentials" aria-labelledby="credentials-heading">
+      <div class="method-title"><div><h2 id="credentials-heading">凭证与更换</h2><p>两个 Token，三个步骤；页面只提供入口，不经手密钥。</p></div></div>
+      <div class="credential-layout">
+        <div id="credentials-list" class="credential-cards"></div>
+        <aside class="rotation-panel">
+          <h3>更换 Token</h3><ol id="rotation-steps" class="rotation-steps"></ol>
+          <div class="rotation-actions"><a id="link-secrets" class="button primary-button" href="#" target="_blank" rel="noopener noreferrer">在 GitHub 更换 Token ↗</a><a id="link-workflow" class="button" href="#" target="_blank" rel="noopener noreferrer">运行连接检查 ↗</a><a id="link-runs" class="text-link" href="#" target="_blank" rel="noopener noreferrer">查看检查记录</a></div>
+          <div class="badge-row"><span>工作流运行状态与脱敏结果在 GitHub Actions 页面查看；本站不向外部站点发起请求。</span></div>
+          <p class="small-note">需要以仓库所有者身份登录 GitHub；Secret 的值在保存后任何人（包括本站）都无法读出，只能覆盖。</p>
+        </aside>
+      </div>
+    </section>
+    <section class="sources-section" aria-labelledby="check-heading">
+      <div class="method-title"><div><h2 id="check-heading">最近一次连接检查</h2><p>构建时记录的脱敏结果：状态类别、HTTP 码、请求次数，不含任何密钥或价格。</p></div></div>
+      <div id="check-list" class="check-table"></div>
+    </section>
+    <section class="sources-section" aria-labelledby="available-heading">
+      <div class="method-title"><div><h2 id="available-heading">可接入但尚未使用</h2><p>目录中已核对、因权限或环境原因暂未纳入的接口。</p></div></div>
+      <ul id="available-list" class="limitation-list"></ul>
+    </section>
+    <footer class="site-footer"><span>市场事件归因系统 <span class="footer-separator">/</span> 数据接入</span><span id="sources-build">—</span></footer>
+  </main>
+</body>
+</html>

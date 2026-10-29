@@ -27,6 +27,9 @@ BASE_FILES = [
     'tools/attribution_taxonomy.py', 'tools/build_attribution.py',
     'tools/check_attribution_browser.py', 'tools/validate.py', 'tests/test_attribution.py',
     'data/replay_evidence.json', 'tools/build_replay_evidence.py',
+    'sources.html', 'assets/sources.css', 'assets/sources.js', 'data/sources.json',
+    'tools/build_sources.py', 'tools/check_data_sources.py', 'tests/test_data_sources.py',
+    '.github/workflows/data-sources-check.yml',
 ]
 
 
@@ -134,7 +137,7 @@ def main() -> None:
     git('config', 'user.email', 'project@localhost')
     git('add', '--', *files)
     if git('diff', '--cached', '--quiet', check=False).returncode:
-        git('commit', '-m', 'Add provider money-flow evidence to attribution causes and replay events\n\n'
+        git('commit', '-m', 'Add data-sources page with route inventory and credential rotation entry\n\n'
             'Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>')
     git('-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential', 'push', 'origin', 'HEAD:main')
     commit = git('rev-parse', 'HEAD').stdout.strip()
